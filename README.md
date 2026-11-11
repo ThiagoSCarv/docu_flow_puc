@@ -41,7 +41,7 @@ npm run certs        # gera certs/key.pem e certs/cert.pem (uma vez só)
 cp server/.env.example server/.env
 ```
 
-O `server/.env` é obrigatório: o servidor não sobe sem `DATABASE_URL`. Os valores do `.env.example` já batem com o PostgreSQL do Docker. Ele é lido pelo próprio Node (`process.loadEnvFile`), sem dotenv.
+O `server/.env` é obrigatório: o servidor não sobe sem `DATABASE_URL` e `JWT_SECRET` (mínimo 32 caracteres). O `DATABASE_URL` do `.env.example` já bate com o PostgreSQL do Docker; troque `JWT_SECRET` e `SEED_ADMIN_PASSWORD`. Para gerar um segredo: `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`. Ele é lido pelo próprio Node (`process.loadEnvFile`), sem dotenv.
 
 Em dois terminais:
 
@@ -59,6 +59,7 @@ Para conferir: abra https://localhost:5173. A tela deve mostrar `API: ok`.
 ```bash
 npm run db:up                      # sobe o PostgreSQL no Docker
 npm run db:migrate -w server       # cria/atualiza as tabelas
+npm run db:seed -w server          # categorias iniciais + admin (SEED_ADMIN_* do .env)
 npm run db:down                    # derruba
 ```
 
@@ -69,6 +70,7 @@ Ao alterar `server/src/db/schema.ts`, gere a migration com `npm run db:generate 
 - **Prefixo `/api`:** todas as rotas da API começam com `/api` (ex.: `/api/health`, `/api/auth/login`). Assim elas não colidem com as rotas do React Router quando o Fastify passar a servir o build do front.
 - **Caminhos relativos:** o front chama sempre `fetch('/api/...')`. Em desenvolvimento, o Vite repassa essas chamadas para `https://localhost:3333` (proxy). Em produção, front e API ficam na mesma origem. Nos dois casos não há CORS nem URL fixa no código. Para apontar para outra API em dev: `API_URL=https://outro-host npm run dev:web`.
 - **Contrato:** a documentação OpenAPI em **https://localhost:3333/docs** é gerada automaticamente a partir dos schemas Zod das rotas. É a referência do front para formatos de requisição e resposta.
+- **Autenticação:** `POST /api/auth/login` com `{ email, password }` devolve `{ token }`, válido por 1 hora. As demais rotas recebem o header `Authorization: Bearer <token>`. `GET /api/auth/me` devolve o usuário logado (nome, e-mail, perfil). Respostas: 401 para credenciais inválidas ou token ausente/expirado, 403 para perfil sem permissão, 423 para conta bloqueada após 5 tentativas (15 minutos), 429 para mais de 10 tentativas de login por minuto. No `/docs`, use o botão **Authorize** com o token para testar as rotas protegidas.
 - **Health check:** `GET /api/health` retorna `{ "status": "ok" }` e serve para confirmar que o cliente alcança o servidor via HTTPS.
 
 ## HTTPS
