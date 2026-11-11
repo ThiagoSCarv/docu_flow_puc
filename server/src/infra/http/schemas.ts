@@ -25,6 +25,19 @@ export const documentSchema = z.object({
   createdAt: z.date(),
 })
 
+export const categorySchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  code: z.string(),
+})
+
+export const clientSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  code: z.string(),
+  active: z.boolean(),
+})
+
 export const messageSchema = z.object({ message: z.string() })
 
 export const bearerAuth = [{ bearerAuth: [] }]

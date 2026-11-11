@@ -15,6 +15,8 @@ import { createUseCases } from './composition-root.js'
 import { errorHandler } from './error-handler.js'
 import { authPlugin } from './plugins/auth.plugin.js'
 import { authRoutes } from './routes/auth.routes.js'
+import { categoryRoutes } from './routes/categories.routes.js'
+import { clientRoutes } from './routes/clients.routes.js'
 import { documentRoutes } from './routes/documents.routes.js'
 import { healthRoutes } from './routes/health.routes.js'
 import { userRoutes } from './routes/users.routes.js'
@@ -54,7 +56,13 @@ export async function buildApp({ db, jwtSecret, ...options }: AppOptions) {
   await app.register(documentRoutes, {
     prefix: API_PREFIX,
     createDocument: useCases.createDocument,
+    searchDocuments: useCases.searchDocuments,
   })
+  await app.register(categoryRoutes, {
+    prefix: API_PREFIX,
+    listCategories: useCases.listCategories,
+  })
+  await app.register(clientRoutes, { prefix: API_PREFIX, listClients: useCases.listClients })
 
   return app
 }

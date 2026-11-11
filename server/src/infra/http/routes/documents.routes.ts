@@ -1,17 +1,50 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import type { CreateDocumentUseCase } from '../../../application/catalog/create-document.use-case.js'
+import type { SearchDocumentsUseCase } from '../../../application/catalog/search-documents.use-case.js'
 import { UserRole } from '../../../shared/utils/enums.js'
 import { bearerAuth, documentSchema, messageSchema } from '../schemas.js'
 
-type DocumentRoutesOptions = { createDocument: CreateDocumentUseCase }
+type DocumentRoutesOptions = {
+  createDocument: CreateDocumentUseCase
+  searchDocuments: SearchDocumentsUseCase
+}
 
 const DESCRIPTION_MAX_LENGTH = 200
+const SEARCH_MAX_LENGTH = 100
+
+const optionalText = (maxLength: number) =>
+  z
+    .string()
+    .trim()
+    .max(maxLength)
+    .optional()
+    .transform((value) => value || undefined)
 
 export const documentRoutes: FastifyPluginAsyncZod<DocumentRoutesOptions> = async (
   app,
-  { createDocument },
+  { createDocument, searchDocuments },
 ) => {
+  app.get(
+    '/documents',
+    {
+      onRequest: [app.authenticate],
+      schema: {
+        tags: ['documents'],
+        summary: 'Pesquisa documentos nas categorias que o usuário pode ver (ADMIN vê todas)',
+        security: bearerAuth,
+        querystring: z.object({
+          search: optionalText(SEARCH_MAX_LENGTH).describe('Trecho do nome ou da descrição'),
+          categoryId: z.uuid().optional(),
+          clientId: z.uuid().optional(),
+          period: optionalText(7).describe('AAAA-MM'),
+        }),
+        response: { 200: z.array(documentSchema), 400: messageSchema, 401: messageSchema },
+      },
+    },
+    (request) => searchDocuments.execute({ ...request.query, actor: request.user }),
+  )
+
   app.post(
     '/documents',
     {

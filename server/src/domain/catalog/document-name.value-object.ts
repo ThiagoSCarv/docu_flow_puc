@@ -26,6 +26,10 @@ export class DocumentName {
       [client, category, parts.period.value, description].join(PART_SEPARATOR),
     )
   }
+
+  static restore(value: string): DocumentName {
+    return new DocumentName(value)
+  }
 }
 
 function standardize(raw: string, partLabel: string): string {

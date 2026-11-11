@@ -1,4 +1,7 @@
 import { CreateDocumentUseCase } from '../../application/catalog/create-document.use-case.js'
+import { ListCategoriesUseCase } from '../../application/catalog/list-categories.use-case.js'
+import { ListClientsUseCase } from '../../application/catalog/list-clients.use-case.js'
+import { SearchDocumentsUseCase } from '../../application/catalog/search-documents.use-case.js'
 import { CreateUserUseCase } from '../../application/identity/create-user.use-case.js'
 import { GetAuthenticatedUserUseCase } from '../../application/identity/get-authenticated-user.use-case.js'
 import { ListUsersUseCase } from '../../application/identity/list-users.use-case.js'
@@ -27,6 +30,9 @@ export function createUseCases(db: Database) {
     listUsers: new ListUsersUseCase(users),
     getAuthenticatedUser: new GetAuthenticatedUserUseCase(users),
     createDocument: new CreateDocumentUseCase(documents, clients, categories, activityLog, clock),
+    searchDocuments: new SearchDocumentsUseCase(documents),
+    listCategories: new ListCategoriesUseCase(categories),
+    listClients: new ListClientsUseCase(clients),
   }
 }
 
