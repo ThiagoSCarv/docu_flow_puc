@@ -13,14 +13,19 @@ Monorepo com **npm workspaces**:
 | `scripts/` | Utilitários (geração de certificados)          | ambos       |
 | `certs/`   | Certificados locais (gerados, fora do git)     | —           |
 
+O back-end segue DDD e Clean Architecture. As dependências apontam para dentro: `infra` → `application` → `domain` → `shared`.
+
 ```
 server/
 ├── src/
-│   ├── app.ts          # buildApp(): monta o Fastify (usado pelo server.ts e pelos testes)
-│   ├── server.ts       # sobe a API em HTTPS com os certificados de certs/
-│   ├── env.ts          # variáveis de ambiente validadas com Zod
-│   └── routes/         # uma rota por arquivo, registradas sob /api
-└── test/               # Vitest
+│   ├── shared/         # enums (utils/enums.ts) e erro base de domínio
+│   ├── domain/         # entidades, value objects, interfaces de repositório, por contexto
+│   ├── application/    # casos de uso (um por arquivo) e portas (PasswordHasher, Clock)
+│   └── infra/          # Fastify (http/), Drizzle (database/), bcrypt, env
+├── drizzle/            # migrations geradas
+└── test/
+    ├── unit/           # domínio e casos de uso com fakes em memória
+    └── integration/    # HTTP + PGlite
 web/
 ├── src/
 │   ├── main.tsx        # ponto de entrada (QueryClientProvider)

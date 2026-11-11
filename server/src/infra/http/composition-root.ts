@@ -1,0 +1,27 @@
+import { CreateUserUseCase } from '../../application/identity/create-user.use-case.js'
+import { GetAuthenticatedUserUseCase } from '../../application/identity/get-authenticated-user.use-case.js'
+import { ListUsersUseCase } from '../../application/identity/list-users.use-case.js'
+import { LoginUseCase } from '../../application/identity/login.use-case.js'
+import { SystemClock } from '../clock/system-clock.js'
+import { BcryptPasswordHasher } from '../crypto/bcrypt-password-hasher.js'
+import { DrizzleActivityLogRepository } from '../database/repositories/drizzle-activity-log.repository.js'
+import { DrizzleCategoryRepository } from '../database/repositories/drizzle-category.repository.js'
+import { DrizzleUserRepository } from '../database/repositories/drizzle-user.repository.js'
+import type { Database } from '../database/types.js'
+
+export function createUseCases(db: Database) {
+  const users = new DrizzleUserRepository(db)
+  const categories = new DrizzleCategoryRepository(db)
+  const activityLog = new DrizzleActivityLogRepository(db)
+  const hasher = new BcryptPasswordHasher()
+  const clock = new SystemClock()
+
+  return {
+    login: new LoginUseCase(users, hasher, activityLog, clock),
+    createUser: new CreateUserUseCase(users, categories, hasher, activityLog, clock),
+    listUsers: new ListUsersUseCase(users),
+    getAuthenticatedUser: new GetAuthenticatedUserUseCase(users),
+  }
+}
+
+export type UseCases = ReturnType<typeof createUseCases>
