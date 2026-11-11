@@ -6,7 +6,7 @@ import { EmailAlreadyInUseError } from '../../domain/identity/identity.errors.js
 import { Password } from '../../domain/identity/password.value-object.js'
 import { User } from '../../domain/identity/user.entity.js'
 import type { UserRepository } from '../../domain/identity/user.repository.js'
-import { ActivityAction, type UserRole } from '../../shared/utils/enums.js'
+import { ActivityAction, ActivityEntity, type UserRole } from '../../shared/utils/enums.js'
 import type { Clock } from '../ports/clock.js'
 import type { PasswordHasher } from '../ports/password-hasher.js'
 import { toUserDto, type UserDto } from './user.dto.js'
@@ -50,7 +50,7 @@ export class CreateUserUseCase {
     await this.activityLog.record({
       userId: input.actor.userId,
       action: ActivityAction.USUARIO_CRIADO,
-      entity: 'users',
+      entity: ActivityEntity.USERS,
       entityId: user.id,
       ip: input.actor.ip,
     })

@@ -1,5 +1,12 @@
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify'
-import { UnknownCategoryError } from '../../domain/catalog/catalog.errors.js'
+import {
+  CategoryNotAllowedError,
+  InactiveClientError,
+  InvalidDocumentNameError,
+  InvalidPeriodError,
+  UnknownCategoryError,
+  UnknownClientError,
+} from '../../domain/catalog/catalog.errors.js'
 import {
   AccessDeniedError,
   AccountLockedError,
@@ -19,9 +26,14 @@ const HTTP_STATUS_BY_ERROR = new Map<DomainErrorClass, number>([
   [InvalidEmailError, 400],
   [WeakPasswordError, 400],
   [UnknownCategoryError, 400],
+  [UnknownClientError, 400],
+  [InactiveClientError, 400],
+  [InvalidPeriodError, 400],
+  [InvalidDocumentNameError, 400],
   [InvalidCredentialsError, 401],
   [NotAuthenticatedError, 401],
   [AccessDeniedError, 403],
+  [CategoryNotAllowedError, 403],
   [EmailAlreadyInUseError, 409],
   [AccountLockedError, 423],
 ])
