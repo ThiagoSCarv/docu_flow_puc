@@ -13,6 +13,18 @@ export const userSchema = z.object({
   allowedCategoryIds: z.array(z.uuid()),
 })
 
+export const documentSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  description: z.string(),
+  period: z.string(),
+  cloudLocation: z.url(),
+  clientId: z.uuid(),
+  categoryId: z.uuid(),
+  createdBy: z.uuid(),
+  createdAt: z.date(),
+})
+
 export const messageSchema = z.object({ message: z.string() })
 
 export const bearerAuth = [{ bearerAuth: [] }]
