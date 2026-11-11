@@ -41,7 +41,7 @@ describe('CreateUserUseCase', () => {
     activityLog = new InMemoryActivityLogRepository()
     useCase = new CreateUserUseCase(
       users,
-      new InMemoryCategoryRepository([FISCAIS]),
+      new InMemoryCategoryRepository([{ id: FISCAIS, name: 'Fiscais', code: 'FIS' }]),
       new FakePasswordHasher(),
       activityLog,
       new FixedClock(),
