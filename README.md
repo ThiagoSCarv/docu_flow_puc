@@ -41,7 +41,7 @@ npm run certs        # gera certs/key.pem e certs/cert.pem (uma vez só)
 cp server/.env.example server/.env
 ```
 
-O `server/.env` é opcional enquanto os valores padrão servirem (`HOST=localhost`, `PORT=3333`). Ele é lido pelo próprio Node (`process.loadEnvFile`), sem dotenv.
+O `server/.env` é obrigatório: o servidor não sobe sem `DATABASE_URL`. Os valores do `.env.example` já batem com o PostgreSQL do Docker. Ele é lido pelo próprio Node (`process.loadEnvFile`), sem dotenv.
 
 Em dois terminais:
 
@@ -57,9 +57,12 @@ Para conferir: abra https://localhost:5173. A tela deve mostrar `API: ok`.
 ### Banco de dados
 
 ```bash
-npm run db:up        # sobe o PostgreSQL no Docker
-npm run db:down      # derruba
+npm run db:up                      # sobe o PostgreSQL no Docker
+npm run db:migrate -w server       # cria/atualiza as tabelas
+npm run db:down                    # derruba
 ```
+
+Ao alterar `server/src/db/schema.ts`, gere a migration com `npm run db:generate -w server -- --name <descricao>` e faça commit da pasta `server/drizzle/` junto.
 
 ## Comunicação entre web e server
 
