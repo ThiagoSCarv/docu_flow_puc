@@ -16,3 +16,10 @@ export enum ActivityAction {
   LOGIN_BLOQUEADO = 'LOGIN_BLOQUEADO',
   USUARIO_CRIADO = 'USUARIO_CRIADO',
 }
+
+export enum ActivityEntity {
+  USERS = 'users',
+  DOCUMENTS = 'documents',
+  BACKUPS = 'backups',
+  CLIENTS = 'clients',
+}

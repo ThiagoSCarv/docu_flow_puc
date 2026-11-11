@@ -9,7 +9,7 @@ import {
   InvalidEmailError,
   WeakPasswordError,
 } from '../../../src/domain/identity/identity.errors.js'
-import { ActivityAction, UserRole } from '../../../src/shared/utils/enums.js'
+import { ActivityAction, ActivityEntity, UserRole } from '../../../src/shared/utils/enums.js'
 import {
   FakePasswordHasher,
   FixedClock,
@@ -71,7 +71,7 @@ describe('CreateUserUseCase', () => {
       {
         userId: ADMIN.userId,
         action: ActivityAction.USUARIO_CRIADO,
-        entity: 'users',
+        entity: ActivityEntity.USERS,
         entityId: created.id,
         ip: ADMIN.ip,
       },

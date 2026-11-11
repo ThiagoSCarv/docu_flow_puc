@@ -1,9 +1,9 @@
-import type { ActivityAction } from '../../shared/utils/enums.js'
+import type { ActivityAction, ActivityEntity } from '../../shared/utils/enums.js'
 
 export type ActivityLogEntry = {
   userId: string | null
   action: ActivityAction
-  entity?: string
+  entity?: ActivityEntity
   entityId?: string
   ip?: string
 }
