@@ -1,7 +1,14 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { categories, clients, documents, userCategoryPermissions, users } from '../src/db/schema.js'
-import type { Database } from '../src/db/types.js'
-import { createTestDb } from './helpers/db.js'
+import {
+  categories,
+  clients,
+  documents,
+  userCategoryPermissions,
+  users,
+} from '../../src/infra/database/schema.js'
+import type { Database } from '../../src/infra/database/types.js'
+import { UserRole } from '../../src/shared/utils/enums.js'
+import { createTestDb } from '../helpers/db.js'
 
 describe('schema do banco', () => {
   let db: Database
@@ -15,7 +22,12 @@ describe('schema do banco', () => {
 
     const [user] = await db
       .insert(users)
-      .values({ name: 'Admin', email: 'admin@exemplo.com', passwordHash: 'x', role: 'ADMIN' })
+      .values({
+        name: 'Admin',
+        email: 'admin@exemplo.com',
+        passwordHash: 'x',
+        role: UserRole.ADMIN,
+      })
       .returning()
     const [category] = await db
       .insert(categories)
@@ -53,17 +65,23 @@ describe('schema do banco', () => {
 
   it('rejeita e-mail com letras maiúsculas', async () => {
     await expect(
-      db
-        .insert(users)
-        .values({ name: 'X', email: 'Fulano@exemplo.com', passwordHash: 'x', role: 'CONSULTA' }),
+      db.insert(users).values({
+        name: 'X',
+        email: 'Fulano@exemplo.com',
+        passwordHash: 'x',
+        role: UserRole.CONSULTA,
+      }),
     ).rejects.toThrow()
   })
 
   it('rejeita e-mail duplicado', async () => {
     await expect(
-      db
-        .insert(users)
-        .values({ name: 'Y', email: 'admin@exemplo.com', passwordHash: 'x', role: 'CONSULTA' }),
+      db.insert(users).values({
+        name: 'Y',
+        email: 'admin@exemplo.com',
+        passwordHash: 'x',
+        role: UserRole.CONSULTA,
+      }),
     ).rejects.toThrow()
   })
 

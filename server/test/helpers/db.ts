@@ -2,8 +2,8 @@ import { fileURLToPath } from 'node:url'
 import { PGlite } from '@electric-sql/pglite'
 import { drizzle } from 'drizzle-orm/pglite'
 import { migrate } from 'drizzle-orm/pglite/migrator'
-import * as schema from '../../src/db/schema.js'
-import type { Database } from '../../src/db/types.js'
+import * as schema from '../../src/infra/database/schema.js'
+import type { Database } from '../../src/infra/database/types.js'
 
 const migrationsFolder = fileURLToPath(new URL('../../drizzle', import.meta.url))
 

@@ -12,9 +12,10 @@ import {
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core'
+import { type ActivityAction, BackupStatus, UserRole } from '../../shared/utils/enums.js'
 
-export const userRole = pgEnum('user_role', ['ADMIN', 'FUNCIONARIO', 'CONSULTA'])
-export const backupStatus = pgEnum('backup_status', ['REALIZADO', 'VERIFICADO', 'FALHOU'])
+export const userRole = pgEnum('user_role', UserRole)
+export const backupStatus = pgEnum('backup_status', BackupStatus)
 
 const createdAt = () => timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
 
@@ -103,7 +104,7 @@ export const activityLogs = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
-    action: text('action').notNull(),
+    action: text('action').$type<ActivityAction>().notNull(),
     entity: text('entity'),
     entityId: uuid('entity_id'),
     ip: text('ip'),
