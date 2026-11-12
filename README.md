@@ -133,6 +133,30 @@ Para instalar uma dependência em um pacote específico: `npm install <pacote> -
 
 O VS Code recomenda as extensões Biome e EditorConfig ao abrir o projeto e formata ao salvar. O `.gitattributes` força finais de linha LF, para evitar diffs falsos entre Windows e Linux.
 
+## Situação do projeto
+
+### Pronto (servidor)
+
+| Requisito                    | Entrega                                                                         |
+| ---------------------------- | ------------------------------------------------------------------------------- |
+| RF01, RF02, RF05             | Cadastro de usuários pelo ADMIN, login por e-mail e senha, três perfis          |
+| RF06, RF08                   | Cadastro e consulta de clientes fictícios                                       |
+| RF09, RF11, RF12, RF14, RF17 | Cadastro de documento com cliente, categoria, período e link da nuvem           |
+| RF15, RF19                   | Busca por nome, categoria, cliente e período, restrita às categorias            |
+| RF22, RF23, RF24             | Registro e histórico de backups                                                 |
+| RF26                         | Log de login e de cadastros                                                     |
+| RF28                         | Orientações educativas de segurança                                             |
+| RF31                         | Nome padronizado `CLIENTE_CATEGORIA_AAAA-MM_descricao`                          |
+| RNF04, RNF13, RNF14, RNF15   | bcrypt, bloqueio após 5 falhas, JWT de 1 hora, senha forte                      |
+| RNF05, RNF06, RNF07, RNF10   | Permissões no servidor, HTTPS, validação com Zod, respostas sem dados sensíveis |
+
+### Falta
+
+- **Servidor:** recusar documento com nome padronizado repetido; rota para o ADMIN redefinir a senha de um usuário.
+- **Front:** telas de login, documentos, clientes, backups e orientações (hoje o `web/` só confere a conexão com a API).
+- **Produção:** o Fastify servir o build do React na mesma origem (`@fastify/static`).
+- **Opcional:** SSL entre servidor e PostgreSQL; script de `pg_dump`; requisitos desejáveis (RF04, RF07, RF10, RF20, RF25, RF27, RF29).
+
 ## Segurança
 
 - HTTPS em todos os ambientes, inclusive local (RNF06).
