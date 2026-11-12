@@ -1,3 +1,4 @@
+import { CreateClientUseCase } from '../../application/catalog/create-client.use-case.js'
 import { CreateDocumentUseCase } from '../../application/catalog/create-document.use-case.js'
 import { ListCategoriesUseCase } from '../../application/catalog/list-categories.use-case.js'
 import { ListClientsUseCase } from '../../application/catalog/list-clients.use-case.js'
@@ -32,6 +33,7 @@ export function createUseCases(db: Database) {
     createDocument: new CreateDocumentUseCase(documents, clients, categories, activityLog, clock),
     searchDocuments: new SearchDocumentsUseCase(documents),
     listCategories: new ListCategoriesUseCase(categories),
+    createClient: new CreateClientUseCase(clients, activityLog, clock),
     listClients: new ListClientsUseCase(clients),
   }
 }

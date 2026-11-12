@@ -30,6 +30,18 @@ export class InvalidPeriodError extends DomainError {
   }
 }
 
+export class InvalidClientCodeError extends DomainError {
+  constructor(maxLength: number) {
+    super(`Código do cliente inválido. Use até ${maxLength} letras, números ou hífens.`)
+  }
+}
+
+export class ClientCodeAlreadyInUseError extends DomainError {
+  constructor() {
+    super('Código de cliente já cadastrado')
+  }
+}
+
 export class InvalidDocumentNameError extends DomainError {
   constructor(part: string) {
     super(`Não foi possível padronizar o nome do documento: ${part} sem letras ou números`)
