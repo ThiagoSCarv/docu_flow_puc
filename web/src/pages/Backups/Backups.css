@@ -1,0 +1,113 @@
+.backups-notice {
+  padding: 16px;
+  margin-bottom: 24px;
+  border: 1px solid #d9e5ff;
+  border-radius: 10px;
+  background: #e9f0ff;
+  color: #2457b7;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.backups-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 440px;
+}
+
+.backups-filter label {
+  color: #263449;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.backups-filter select {
+  width: 100%;
+  min-height: 44px;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #263449;
+  font: inherit;
+}
+
+.backups-filter select:focus-visible {
+  outline: 3px solid #2864d9;
+  outline-offset: 2px;
+}
+
+.backups-count {
+  margin: 20px 0 12px;
+  color: #61738f;
+  font-size: 14px;
+}
+
+.backups-table-container {
+  overflow-x: auto;
+  border: 1px solid #e9edf3;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.backups-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+}
+
+.backups-table caption {
+  padding: 16px;
+  text-align: left;
+  color: #61738f;
+}
+
+.backups-table th,
+.backups-table td {
+  padding: 16px;
+  border-bottom: 1px solid #e9edf3;
+}
+
+.backups-table th {
+  background: #f1f5f9;
+  color: #263449;
+}
+
+.backups-table td {
+  color: #475569;
+  line-height: 1.6;
+}
+
+.backups-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.backup-status {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.backup-status-realizado {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.backup-status-verificado {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.backup-status-falhou {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.backups-empty {
+  text-align: center;
+}
