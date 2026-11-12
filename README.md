@@ -82,17 +82,17 @@ Ao alterar `server/src/infra/database/schema.ts`, gere a migration com `npm run 
 
 Todas sob `/api`. As permissões são verificadas no servidor. Perfis: `ADMIN`, `FUNCIONARIO` e `CONSULTA`.
 
-| Método | Rota | Acesso | Requisito |
-| ------ | ---- | ------ | --------- |
-| GET | `/health` | público | — |
-| POST | `/auth/login` | público, 10 tentativas/min | RF02 |
-| GET | `/auth/me` | autenticado | RF02 |
-| GET / POST | `/users` | ADMIN | RF01, RF05 |
-| GET | `/categories` | autenticado, só as categorias permitidas | RF19 |
-| GET / POST | `/clients` | autenticado / ADMIN | RF06, RF08 |
-| GET | `/documents?search&categoryId&clientId&period` | autenticado, só as categorias permitidas | RF15, RF19 |
-| POST | `/documents` | ADMIN; FUNCIONARIO só nas categorias permitidas | RF09, RF11, RF12, RF14, RF17, RF31 |
-| GET / POST | `/backups` | autenticado / ADMIN | RF22, RF23, RF24 |
+| Método     | Rota                                           | Acesso                                          | Requisito                          |
+| ---------- | ---------------------------------------------- | ----------------------------------------------- | ---------------------------------- |
+| GET        | `/health`                                      | público                                         | —                                  |
+| POST       | `/auth/login`                                  | público, 10 tentativas/min                      | RF02                               |
+| GET        | `/auth/me`                                     | autenticado                                     | RF02                               |
+| GET / POST | `/users`                                       | ADMIN                                           | RF01, RF05                         |
+| GET        | `/categories`                                  | autenticado, só as categorias permitidas        | RF19                               |
+| GET / POST | `/clients`                                     | autenticado / ADMIN                             | RF06, RF08                         |
+| GET        | `/documents?search&categoryId&clientId&period` | autenticado, só as categorias permitidas        | RF15, RF19                         |
+| POST       | `/documents`                                   | ADMIN; FUNCIONARIO só nas categorias permitidas | RF09, RF11, RF12, RF14, RF17, RF31 |
+| GET / POST | `/backups`                                     | autenticado / ADMIN                             | RF22, RF23, RF24                   |
 
 Regras de negócio que o front precisa conhecer:
 
