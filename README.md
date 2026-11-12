@@ -93,6 +93,7 @@ Todas sob `/api`. As permissões são verificadas no servidor. Perfis: `ADMIN`, 
 | GET        | `/documents?search&categoryId&clientId&period` | autenticado, só as categorias permitidas        | RF15, RF19                         |
 | POST       | `/documents`                                   | ADMIN; FUNCIONARIO só nas categorias permitidas | RF09, RF11, RF12, RF14, RF17, RF31 |
 | GET / POST | `/backups`                                     | autenticado / ADMIN                             | RF22, RF23, RF24                   |
+| GET        | `/security-guidelines`                         | autenticado                                     | RF28                               |
 
 Regras de negócio que o front precisa conhecer:
 
@@ -100,6 +101,7 @@ Regras de negócio que o front precisa conhecer:
 - **Clientes:** o código é convertido para maiúsculas e aceita só letras, números e `-`, com até 20 caracteres. Código repetido retorna 409.
 - **Documentos:** o nome é gerado pelo servidor no padrão `CLIENTE_CATEGORIA_AAAA-MM_descricao` (ex.: `EMPRESA-EXEMPLO_CONT_2026-03_balanco-patrimonial`). O período segue o formato `AAAA-MM`, e o link da nuvem precisa começar com `https://`. Cliente inativo não recebe documentos novos.
 - **Backups:** o sistema só registra os backups feitos na nuvem; não faz backup. O responsável é o ADMIN que registra. `performedAt` exige data, hora e fuso (ex.: `2026-11-10T22:00:00-03:00`), e uma data no futuro retorna 400. A situação é `REALIZADO`, `VERIFICADO` ou `FALHOU`. O histórico vem do mais recente para o mais antigo.
+- **Orientações de segurança:** conteúdo fixo, igual para todos os perfis, com 8 orientações (`id`, `title`, `summary`, `practices`) na ordem em que devem ser exibidas.
 - **Erros:** respostas de erro de negócio têm o formato `{ "message": "..." }`, com o texto pronto para mostrar ao usuário.
 - **Log:** login, cadastro de usuário, de cliente, de documento e de backup ficam registrados no log de atividades (RF26).
 
