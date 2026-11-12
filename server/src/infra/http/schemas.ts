@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { UserRole } from '../../shared/utils/enums.js'
+import { BackupStatus, UserRole } from '../../shared/utils/enums.js'
 
 export const roleSchema = z.enum(UserRole)
 
@@ -36,6 +36,17 @@ export const clientSchema = z.object({
   name: z.string(),
   code: z.string(),
   active: z.boolean(),
+})
+
+export const backupStatusSchema = z.enum(BackupStatus)
+
+export const backupSchema = z.object({
+  id: z.uuid(),
+  performedAt: z.date(),
+  status: backupStatusSchema,
+  scope: z.string(),
+  notes: z.string().nullable(),
+  responsible: z.object({ id: z.uuid(), name: z.string() }),
 })
 
 export const messageSchema = z.object({ message: z.string() })

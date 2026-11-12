@@ -1,4 +1,5 @@
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify'
+import { BackupInFutureError } from '../../domain/backup/backup.errors.js'
 import {
   CategoryNotAllowedError,
   ClientCodeAlreadyInUseError,
@@ -33,6 +34,7 @@ const HTTP_STATUS_BY_ERROR = new Map<DomainErrorClass, number>([
   [InvalidPeriodError, 400],
   [InvalidDocumentNameError, 400],
   [InvalidClientCodeError, 400],
+  [BackupInFutureError, 400],
   [InvalidCredentialsError, 401],
   [NotAuthenticatedError, 401],
   [AccessDeniedError, 403],
