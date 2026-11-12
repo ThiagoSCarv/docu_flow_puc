@@ -1,3 +1,5 @@
+import { ListBackupsUseCase } from '../../application/backup/list-backups.use-case.js'
+import { RegisterBackupUseCase } from '../../application/backup/register-backup.use-case.js'
 import { CreateClientUseCase } from '../../application/catalog/create-client.use-case.js'
 import { CreateDocumentUseCase } from '../../application/catalog/create-document.use-case.js'
 import { ListCategoriesUseCase } from '../../application/catalog/list-categories.use-case.js'
@@ -10,6 +12,7 @@ import { LoginUseCase } from '../../application/identity/login.use-case.js'
 import { SystemClock } from '../clock/system-clock.js'
 import { BcryptPasswordHasher } from '../crypto/bcrypt-password-hasher.js'
 import { DrizzleActivityLogRepository } from '../database/repositories/drizzle-activity-log.repository.js'
+import { DrizzleBackupRepository } from '../database/repositories/drizzle-backup.repository.js'
 import { DrizzleCategoryRepository } from '../database/repositories/drizzle-category.repository.js'
 import { DrizzleClientRepository } from '../database/repositories/drizzle-client.repository.js'
 import { DrizzleDocumentRepository } from '../database/repositories/drizzle-document.repository.js'
@@ -22,6 +25,7 @@ export function createUseCases(db: Database) {
   const clients = new DrizzleClientRepository(db)
   const documents = new DrizzleDocumentRepository(db)
   const activityLog = new DrizzleActivityLogRepository(db)
+  const backups = new DrizzleBackupRepository(db)
   const hasher = new BcryptPasswordHasher()
   const clock = new SystemClock()
 
@@ -35,6 +39,8 @@ export function createUseCases(db: Database) {
     listCategories: new ListCategoriesUseCase(categories),
     createClient: new CreateClientUseCase(clients, activityLog, clock),
     listClients: new ListClientsUseCase(clients),
+    registerBackup: new RegisterBackupUseCase(backups, activityLog, clock),
+    listBackups: new ListBackupsUseCase(backups),
   }
 }
 

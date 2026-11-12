@@ -4,6 +4,8 @@ import type {
   ActivityLogEntry,
   ActivityLogRepository,
 } from '../../src/domain/audit/activity-log.repository.js'
+import type { Backup } from '../../src/domain/backup/backup.entity.js'
+import type { BackupRepository } from '../../src/domain/backup/backup.repository.js'
 import type { Category } from '../../src/domain/catalog/category.entity.js'
 import type { CategoryRepository } from '../../src/domain/catalog/category.repository.js'
 import type { Client } from '../../src/domain/catalog/client.entity.js'
@@ -93,6 +95,25 @@ export class InMemoryDocumentRepository implements DocumentRepository {
           document.name.value.toLowerCase().includes(needle) ||
           document.description.toLowerCase().includes(needle)),
     )
+  }
+}
+
+export class InMemoryBackupRepository implements BackupRepository {
+  readonly items: Backup[] = []
+
+  constructor(private readonly responsibleNames = new Map<string, string>()) {}
+
+  async save(backup: Backup) {
+    this.items.push(backup)
+  }
+
+  async findHistory() {
+    return [...this.items]
+      .sort((a, b) => b.performedAt.getTime() - a.performedAt.getTime())
+      .map((backup) => ({
+        backup,
+        responsibleName: this.responsibleNames.get(backup.responsibleId) ?? '',
+      }))
   }
 }
 
