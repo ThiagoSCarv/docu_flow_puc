@@ -62,7 +62,11 @@ export async function buildApp({ db, jwtSecret, ...options }: AppOptions) {
     prefix: API_PREFIX,
     listCategories: useCases.listCategories,
   })
-  await app.register(clientRoutes, { prefix: API_PREFIX, listClients: useCases.listClients })
+  await app.register(clientRoutes, {
+    prefix: API_PREFIX,
+    createClient: useCases.createClient,
+    listClients: useCases.listClients,
+  })
 
   return app
 }

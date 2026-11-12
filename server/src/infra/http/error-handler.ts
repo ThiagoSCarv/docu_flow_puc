@@ -1,7 +1,9 @@
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify'
 import {
   CategoryNotAllowedError,
+  ClientCodeAlreadyInUseError,
   InactiveClientError,
+  InvalidClientCodeError,
   InvalidDocumentNameError,
   InvalidPeriodError,
   UnknownCategoryError,
@@ -30,11 +32,13 @@ const HTTP_STATUS_BY_ERROR = new Map<DomainErrorClass, number>([
   [InactiveClientError, 400],
   [InvalidPeriodError, 400],
   [InvalidDocumentNameError, 400],
+  [InvalidClientCodeError, 400],
   [InvalidCredentialsError, 401],
   [NotAuthenticatedError, 401],
   [AccessDeniedError, 403],
   [CategoryNotAllowedError, 403],
   [EmailAlreadyInUseError, 409],
+  [ClientCodeAlreadyInUseError, 409],
   [AccountLockedError, 423],
 ])
 

@@ -63,6 +63,16 @@ export class InMemoryClientRepository implements ClientRepository {
   async findById(id: string) {
     return this.clients.find((client) => client.id === id) ?? null
   }
+
+  async findByCode(code: string) {
+    return this.clients.find((client) => client.code === code) ?? null
+  }
+
+  async save(client: Client) {
+    const index = this.clients.findIndex((existing) => existing.id === client.id)
+    if (index === -1) this.clients.push(client)
+    else this.clients[index] = client
+  }
 }
 
 export class InMemoryDocumentRepository implements DocumentRepository {
