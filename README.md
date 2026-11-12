@@ -6,12 +6,12 @@ Catálogo de documentos digitais para um escritório de contabilidade (Projeto I
 
 Monorepo com **npm workspaces**:
 
-| Pasta      | O que é                                        | Responsável |
-| ---------- | ---------------------------------------------- | ----------- |
-| `server/`  | API REST (Fastify 5, Drizzle, PostgreSQL, Zod) | back-end    |
-| `web/`     | Interface (React + Vite, TanStack Query)       | front-end   |
-| `scripts/` | Utilitários (geração de certificados)          | ambos       |
-| `certs/`   | Certificados locais (gerados, fora do git)     | —           |
+| Pasta      | O que é                                        |
+| ---------- | ---------------------------------------------- |
+| `server/`  | API REST (Fastify 5, Drizzle, PostgreSQL, Zod) |
+| `web/`     | Interface (React + Vite, TanStack Query)       |
+| `scripts/` | Utilitários (geração de certificados)          |
+| `certs/`   | Certificados locais (gerados, fora do git)     |
 
 O back-end segue DDD e Clean Architecture. As dependências apontam para dentro: `infra` → `application` → `domain` → `shared`.
 
@@ -19,7 +19,7 @@ O back-end segue DDD e Clean Architecture. As dependências apontam para dentro:
 server/
 ├── src/
 │   ├── shared/         # enums (utils/enums.ts) e erro base de domínio
-│   ├── domain/         # entidades, value objects, interfaces de repositório, por contexto
+│   ├── domain/         # entidades, value objects e repositórios por contexto (identity, catalog, backup, audit)
 │   ├── application/    # casos de uso (um por arquivo) e portas (PasswordHasher, Clock)
 │   └── infra/          # Fastify (http/), Drizzle (database/), bcrypt, env
 ├── drizzle/            # migrations geradas
@@ -68,7 +68,7 @@ npm run db:seed -w server          # categorias iniciais + admin (SEED_ADMIN_* d
 npm run db:down                    # derruba
 ```
 
-Ao alterar `server/src/db/schema.ts`, gere a migration com `npm run db:generate -w server -- --name <descricao>` e faça commit da pasta `server/drizzle/` junto.
+Ao alterar `server/src/infra/database/schema.ts`, gere a migration com `npm run db:generate -w server -- --name <descricao>` e faça commit da pasta `server/drizzle/` junto.
 
 ## Comunicação entre web e server
 
@@ -77,6 +77,31 @@ Ao alterar `server/src/db/schema.ts`, gere a migration com `npm run db:generate 
 - **Contrato:** a documentação OpenAPI em **https://localhost:3333/docs** é gerada automaticamente a partir dos schemas Zod das rotas. É a referência do front para formatos de requisição e resposta.
 - **Autenticação:** `POST /api/auth/login` com `{ email, password }` devolve `{ token }`, válido por 1 hora. As demais rotas recebem o header `Authorization: Bearer <token>`. `GET /api/auth/me` devolve o usuário logado (nome, e-mail, perfil). Respostas: 401 para credenciais inválidas ou token ausente/expirado, 403 para perfil sem permissão, 423 para conta bloqueada após 5 tentativas (15 minutos), 429 para mais de 10 tentativas de login por minuto. No `/docs`, use o botão **Authorize** com o token para testar as rotas protegidas.
 - **Health check:** `GET /api/health` retorna `{ "status": "ok" }` e serve para confirmar que o cliente alcança o servidor via HTTPS.
+
+## Rotas da API
+
+Todas sob `/api`. As permissões são verificadas no servidor. Perfis: `ADMIN`, `FUNCIONARIO` e `CONSULTA`.
+
+| Método | Rota | Acesso | Requisito |
+| ------ | ---- | ------ | --------- |
+| GET | `/health` | público | — |
+| POST | `/auth/login` | público, 10 tentativas/min | RF02 |
+| GET | `/auth/me` | autenticado | RF02 |
+| GET / POST | `/users` | ADMIN | RF01, RF05 |
+| GET | `/categories` | autenticado, só as categorias permitidas | RF19 |
+| GET / POST | `/clients` | autenticado / ADMIN | RF06, RF08 |
+| GET | `/documents?search&categoryId&clientId&period` | autenticado, só as categorias permitidas | RF15, RF19 |
+| POST | `/documents` | ADMIN; FUNCIONARIO só nas categorias permitidas | RF09, RF11, RF12, RF14, RF17, RF31 |
+| GET / POST | `/backups` | autenticado / ADMIN | RF22, RF23, RF24 |
+
+Regras de negócio que o front precisa conhecer:
+
+- **Categorias:** o ADMIN vê todas; os demais perfis só as que o ADMIN liberou no cadastro do usuário. Sem categorias liberadas, a busca de documentos volta vazia. Filtrar por uma categoria não liberada também devolve lista vazia, sem 403.
+- **Clientes:** o código é convertido para maiúsculas e aceita só letras, números e `-`, com até 20 caracteres. Código repetido retorna 409.
+- **Documentos:** o nome é gerado pelo servidor no padrão `CLIENTE_CATEGORIA_AAAA-MM_descricao` (ex.: `EMPRESA-EXEMPLO_CONT_2026-03_balanco-patrimonial`). O período segue o formato `AAAA-MM`, e o link da nuvem precisa começar com `https://`. Cliente inativo não recebe documentos novos.
+- **Backups:** o sistema só registra os backups feitos na nuvem; não faz backup. O responsável é o ADMIN que registra. `performedAt` exige data, hora e fuso (ex.: `2026-11-10T22:00:00-03:00`), e uma data no futuro retorna 400. A situação é `REALIZADO`, `VERIFICADO` ou `FALHOU`. O histórico vem do mais recente para o mais antigo.
+- **Erros:** respostas de erro de negócio têm o formato `{ "message": "..." }`, com o texto pronto para mostrar ao usuário.
+- **Log:** login, cadastro de usuário, de cliente, de documento e de backup ficam registrados no log de atividades (RF26).
 
 ## HTTPS
 
@@ -105,16 +130,6 @@ Os testes montam a aplicação com `buildApp()` e fazem requisições com `app.i
 Para instalar uma dependência em um pacote específico: `npm install <pacote> -w web` (ou `-w server`).
 
 O VS Code recomenda as extensões Biome e EditorConfig ao abrir o projeto e formata ao salvar. O `.gitattributes` força finais de linha LF, para evitar diffs falsos entre Windows e Linux.
-
-## Fluxo de trabalho da dupla
-
-1. Atualize a `main` antes de começar: `git pull`
-2. Crie uma branch por tarefa: `git switch -c feat/web-login` ou `feat/server-documentos`
-3. Mexa só na sua pasta (`web/` ou `server/`). Mudanças na raiz (`package.json`, `biome.json`, CI) devem ser combinadas antes
-4. Antes de abrir o PR, rode `npm run check && npm run typecheck && npm test`
-5. Abra o Pull Request para a `main`. O CI (`.github/workflows/ci.yml`) roda as mesmas verificações e o build do front. A outra pessoa revisa e faz o merge
-
-Se a API precisar de um campo ou rota nova, combinem pelo PR ou por uma issue, e confiram o resultado em `/docs`.
 
 ## Segurança
 
