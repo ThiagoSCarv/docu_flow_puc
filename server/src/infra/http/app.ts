@@ -20,6 +20,7 @@ import { categoryRoutes } from './routes/categories.routes.js'
 import { clientRoutes } from './routes/clients.routes.js'
 import { documentRoutes } from './routes/documents.routes.js'
 import { healthRoutes } from './routes/health.routes.js'
+import { securityGuidelineRoutes } from './routes/security-guidelines.routes.js'
 import { userRoutes } from './routes/users.routes.js'
 
 export const API_PREFIX = '/api'
@@ -72,6 +73,11 @@ export async function buildApp({ db, jwtSecret, ...options }: AppOptions) {
     prefix: API_PREFIX,
     registerBackup: useCases.registerBackup,
     listBackups: useCases.listBackups,
+  })
+
+  await app.register(securityGuidelineRoutes, {
+    prefix: API_PREFIX,
+    listSecurityGuidelines: useCases.listSecurityGuidelines,
   })
 
   return app

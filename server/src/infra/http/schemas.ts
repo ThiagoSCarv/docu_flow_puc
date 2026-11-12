@@ -49,6 +49,13 @@ export const backupSchema = z.object({
   responsible: z.object({ id: z.uuid(), name: z.string() }),
 })
 
+export const securityGuidelineSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  summary: z.string(),
+  practices: z.array(z.string()),
+})
+
 export const messageSchema = z.object({ message: z.string() })
 
 export const bearerAuth = [{ bearerAuth: [] }]

@@ -1,3 +1,4 @@
+import { ListSecurityGuidelinesUseCase } from '../../application/awareness/list-security-guidelines.use-case.js'
 import { ListBackupsUseCase } from '../../application/backup/list-backups.use-case.js'
 import { RegisterBackupUseCase } from '../../application/backup/register-backup.use-case.js'
 import { CreateClientUseCase } from '../../application/catalog/create-client.use-case.js'
@@ -41,6 +42,7 @@ export function createUseCases(db: Database) {
     listClients: new ListClientsUseCase(clients),
     registerBackup: new RegisterBackupUseCase(backups, activityLog, clock),
     listBackups: new ListBackupsUseCase(backups),
+    listSecurityGuidelines: new ListSecurityGuidelinesUseCase(),
   }
 }
 
