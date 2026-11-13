@@ -8,10 +8,10 @@ import { createTestDb } from './db.js'
 export const TEST_JWT_SECRET = 'segredo-de-teste-com-pelo-menos-32-caracteres'
 export const TEST_PASSWORD = 'senha1234'
 
-export async function createTestApp() {
+export async function createTestApp({ webDistDir }: { webDistDir?: string } = {}) {
   const { db, close } = await createTestDb()
   await seedCategories(db)
-  const app = await buildApp({ db, jwtSecret: TEST_JWT_SECRET })
+  const app = await buildApp({ db, jwtSecret: TEST_JWT_SECRET, webDistDir })
   await app.ready()
 
   const passwordHash = await new BcryptPasswordHasher().hash(TEST_PASSWORD)

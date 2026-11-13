@@ -11,6 +11,9 @@ const envSchema = z.object({
   HOST: z.string().default('localhost'),
   PORT: z.coerce.number().int().positive().default(3333),
   CERTS_DIR: z.string().default(fileURLToPath(new URL('../../../../certs/', import.meta.url))),
+  WEB_DIST_DIR: z
+    .string()
+    .default(fileURLToPath(new URL('../../../../web/dist/', import.meta.url))),
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
   JWT_SECRET: z
     .string()

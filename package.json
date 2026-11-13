@@ -15,6 +15,7 @@
     "db:down": "docker compose down",
     "dev:server": "npm run dev -w server",
     "dev:web": "npm run dev -w web",
+    "demo": "npm run build -w web && npm run build -w server && npm run start -w server",
     "check": "biome check .",
     "check:fix": "biome check --write .",
     "typecheck": "npm run typecheck --workspaces",
