@@ -74,8 +74,18 @@ O Fastify serve o build do React (`web/dist`) e a API com o mesmo certificado, n
 npm run db:up                      # sobe o PostgreSQL no Docker
 npm run db:migrate -w server       # cria/atualiza as tabelas
 npm run db:seed -w server          # categorias iniciais + admin (SEED_ADMIN_* do .env)
+npm run db:seed:demo -w server     # o mesmo + dados fictícios para testar (SEED_DEMO_PASSWORD do .env)
 npm run db:down                    # derruba
 ```
+
+O `db:seed:demo` deixa o banco pronto para testar e demonstrar com volume de escritório real. Leva cerca de 2 segundos. Os dados passam pelas regras do domínio (nome padronizado, período, código de cliente) e cada criação entra no log de atividades. Rodar de novo não duplica nada, e tudo é fictício:
+
+- **Usuários (500):** todos com a senha `SEED_DEMO_PASSWORD` (`demo12345` no `.env.example`). Para entrar, use `funcionario@exemplo.com` (FUNCIONARIO, categorias Contábeis, Fiscais e Financeiros) ou `consulta@exemplo.com` (CONSULTA, Contábeis e Fiscais). Os demais seguem o padrão `funcionario.0003@exemplo.com` / `consulta.0004@exemplo.com`, com combinações variadas de categorias. O admin continua sendo o do `SEED_ADMIN_*`.
+- **Clientes (1000):** `CLI-0001` a `CLI-1000`, com nomes como "Comércio Exemplo 0001 Ltda".
+- **Documentos (3250):** 3 ou 4 por cliente, espalhados pelas seis categorias e pelos meses de janeiro a outubro de 2026, com links fictícios em `nuvem.exemplo.com`.
+- **Backups (1000):** um por dia, terminando ontem às 22h. A maioria está `VERIFICADO`, 1 a cada 20 aparece como `FALHOU` e os 3 mais recentes como `REALIZADO` (aguardando verificação).
+
+Entrar com cada perfil mostra a restrição por categoria: o FUNCIONARIO não vê Contratos, Administrativos nem Outros, e o CONSULTA vê só Contábeis e Fiscais.
 
 O PostgreSQL do Docker sobe com SSL ligado, usando o mesmo certificado de `certs/` (rode `npm run certs` antes do `db:up`). Com `DATABASE_SSL=true` no `server/.env`, o servidor se conecta ao banco por TLS e confia só no `certs/cert.pem`: um certificado diferente faz a conexão falhar. Para conferir na demonstração, com o servidor rodando e depois de pelo menos uma requisição (ex.: login):
 
