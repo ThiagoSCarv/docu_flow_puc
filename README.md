@@ -77,6 +77,14 @@ npm run db:seed -w server          # categorias iniciais + admin (SEED_ADMIN_* d
 npm run db:down                    # derruba
 ```
 
+O PostgreSQL do Docker sobe com SSL ligado, usando o mesmo certificado de `certs/` (rode `npm run certs` antes do `db:up`). Com `DATABASE_SSL=true` no `server/.env`, o servidor se conecta ao banco por TLS e confia só no `certs/cert.pem`: um certificado diferente faz a conexão falhar. Para conferir na demonstração, com o servidor rodando e depois de pelo menos uma requisição (ex.: login):
+
+```bash
+docker compose exec db psql -U organizadoc -c "SELECT a.client_addr, s.ssl, s.version FROM pg_stat_ssl s JOIN pg_stat_activity a USING (pid) WHERE a.client_addr IS NOT NULL;"
+```
+
+As conexões do servidor aparecem com `ssl = t` e `version = TLSv1.3`.
+
 Ao alterar `server/src/infra/database/schema.ts`, gere a migration com `npm run db:generate -w server -- --name <descricao>` e faça commit da pasta `server/drizzle/` junto.
 
 ## Comunicação entre web e server
