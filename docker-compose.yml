@@ -1,6 +1,16 @@
 services:
   db:
     image: postgres:17-alpine
+    entrypoint:
+      - sh
+      - -c
+      - >-
+        install -o postgres -g postgres -m 600 /certs/key.pem /var/lib/postgresql/server.key &&
+        install -o postgres -g postgres -m 644 /certs/cert.pem /var/lib/postgresql/server.crt &&
+        exec docker-entrypoint.sh postgres
+        -c ssl=on
+        -c ssl_cert_file=/var/lib/postgresql/server.crt
+        -c ssl_key_file=/var/lib/postgresql/server.key
     environment:
       POSTGRES_USER: organizadoc
       POSTGRES_PASSWORD: organizadoc
@@ -9,6 +19,7 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./certs:/certs:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U organizadoc"]
       interval: 5s
