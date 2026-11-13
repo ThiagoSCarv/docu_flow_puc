@@ -18,11 +18,13 @@ describe('consultas do catálogo', () => {
   const get = (token: string, url: string) =>
     ctx.app.inject({ method: 'GET', url, headers: { authorization: `Bearer ${token}` } })
 
-  const namesOf = (response: { json: () => { name: string }[] }) =>
+  const namesOf = (response: { json: () => { items: { name: string }[] } }) =>
     response
       .json()
-      .map((item) => item.name)
+      .items.map((item) => item.name)
       .sort()
+
+  const emptyPage = { items: [], total: 0 }
 
   const categoryIdByCode = async (code: string) => {
     const [category] = await ctx.db.select().from(categories).where(eq(categories.code, code))
@@ -84,7 +86,8 @@ describe('consultas do catálogo', () => {
       const response = await get(adminToken, '/api/documents')
 
       expect(response.statusCode).toBe(200)
-      expect(response.json()).toHaveLength(3)
+      expect(response.json().items).toHaveLength(3)
+      expect(response.json().total).toBe(3)
     })
 
     it('FUNCIONARIO só lista documentos das categorias permitidas', async () => {
@@ -106,13 +109,13 @@ describe('consultas do catálogo', () => {
       const response = await get(semPermissaoToken, '/api/documents')
 
       expect(response.statusCode).toBe(200)
-      expect(response.json()).toEqual([])
+      expect(response.json()).toEqual(emptyPage)
     })
 
     it('filtrar por categoria não permitida devolve lista vazia', async () => {
       const response = await get(funcionarioToken, `/api/documents?categoryId=${contabeisId}`)
 
-      expect(response.json()).toEqual([])
+      expect(response.json()).toEqual(emptyPage)
     })
 
     it('pesquisa por trecho do nome ou da descrição', async () => {
@@ -128,7 +131,7 @@ describe('consultas do catálogo', () => {
       const underscore = await get(adminToken, '/api/documents?search=_')
 
       expect(namesOf(percent)).toEqual(['CLIA_CONT_2026-03_balanco-100-revisado'])
-      expect(underscore.json()).toHaveLength(3)
+      expect(underscore.json().items).toHaveLength(3)
     })
 
     it('combina filtros de cliente e período', async () => {
@@ -180,10 +183,13 @@ describe('consultas do catálogo', () => {
       const response = await get(consultaToken, '/api/clients')
 
       expect(response.statusCode).toBe(200)
-      expect(response.json()).toEqual([
-        { id: clienteAId, name: 'Cliente A', code: 'CLIA', active: true },
-        { id: clienteBId, name: 'Cliente B', code: 'CLIB', active: true },
-      ])
+      expect(response.json()).toEqual({
+        items: [
+          { id: clienteAId, name: 'Cliente A', code: 'CLIA', active: true },
+          { id: clienteBId, name: 'Cliente B', code: 'CLIB', active: true },
+        ],
+        total: 2,
+      })
     })
 
     it('sem token retorna 401', async () => {

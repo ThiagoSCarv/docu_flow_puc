@@ -4,7 +4,14 @@ import type { CreateUserUseCase } from '../../../application/identity/create-use
 import type { ListUsersUseCase } from '../../../application/identity/list-users.use-case.js'
 import type { ResetUserPasswordUseCase } from '../../../application/identity/reset-user-password.use-case.js'
 import { UserRole } from '../../../shared/utils/enums.js'
-import { bearerAuth, messageSchema, roleSchema, userSchema } from '../schemas.js'
+import {
+  bearerAuth,
+  messageSchema,
+  pageSchema,
+  paginationQuerySchema,
+  roleSchema,
+  userSchema,
+} from '../schemas.js'
 
 type UserRoutesOptions = {
   createUser: CreateUserUseCase
@@ -23,12 +30,18 @@ export const userRoutes: FastifyPluginAsyncZod<UserRoutesOptions> = async (
     {
       schema: {
         tags: ['users'],
-        summary: 'Lista os usuários (somente ADMIN)',
+        summary: 'Lista os usuários em ordem alfabética (somente ADMIN)',
         security: bearerAuth,
-        response: { 200: z.array(userSchema), 401: messageSchema, 403: messageSchema },
+        querystring: paginationQuerySchema,
+        response: {
+          200: pageSchema(userSchema),
+          400: messageSchema,
+          401: messageSchema,
+          403: messageSchema,
+        },
       },
     },
-    () => listUsers.execute(),
+    (request) => listUsers.execute(request.query),
   )
 
   app.post(

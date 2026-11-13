@@ -1,3 +1,4 @@
+import type { Page, PageRequest } from '../../shared/utils/pagination.js'
 import type { Backup } from './backup.entity.js'
 
 export type BackupHistoryEntry = {
@@ -7,5 +8,5 @@ export type BackupHistoryEntry = {
 
 export interface BackupRepository {
   save(backup: Backup): Promise<void>
-  findHistory(): Promise<BackupHistoryEntry[]>
+  findHistory(page: PageRequest): Promise<Page<BackupHistoryEntry>>
 }

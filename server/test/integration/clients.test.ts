@@ -60,7 +60,7 @@ describe('POST /api/clients', () => {
       url: '/api/clients',
       headers: { authorization: `Bearer ${consultaToken}` },
     })
-    expect(response.json().map((client: { code: string }) => client.code)).toContain(
+    expect(response.json().items.map((client: { code: string }) => client.code)).toContain(
       'EMPRESA-EXEMPLO',
     )
   })

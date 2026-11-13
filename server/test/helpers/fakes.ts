@@ -19,6 +19,13 @@ import type { DocumentName } from '../../src/domain/catalog/document-name.value-
 import type { Email } from '../../src/domain/identity/email.value-object.js'
 import type { User } from '../../src/domain/identity/user.entity.js'
 import type { UserRepository } from '../../src/domain/identity/user.repository.js'
+import type { Page, PageRequest } from '../../src/shared/utils/pagination.js'
+
+export const ALL_ITEMS: PageRequest = { limit: 1000, offset: 0 }
+
+function paginate<T>(items: T[], { limit, offset }: PageRequest): Page<T> {
+  return { items: items.slice(offset, offset + limit), total: items.length }
+}
 
 export class InMemoryUserRepository implements UserRepository {
   readonly items = new Map<string, User>()
@@ -31,8 +38,8 @@ export class InMemoryUserRepository implements UserRepository {
     return [...this.items.values()].find((user) => user.email.equals(email)) ?? null
   }
 
-  async findAll() {
-    return [...this.items.values()]
+  async list(page: PageRequest) {
+    return paginate([...this.items.values()], page)
   }
 
   async save(user: User) {
@@ -59,8 +66,8 @@ export class InMemoryCategoryRepository implements CategoryRepository {
 export class InMemoryClientRepository implements ClientRepository {
   constructor(private readonly clients: Client[] = []) {}
 
-  async findAll() {
-    return [...this.clients]
+  async list(page: PageRequest) {
+    return paginate([...this.clients], page)
   }
 
   async findById(id: string) {
@@ -89,9 +96,9 @@ export class InMemoryDocumentRepository implements DocumentRepository {
     return [...this.items.values()].some((document) => document.name.value === name.value)
   }
 
-  async search({ text, categoryIds, clientId, period }: DocumentSearchCriteria) {
+  async search({ text, categoryIds, clientId, period }: DocumentSearchCriteria, page: PageRequest) {
     const needle = text?.toLowerCase()
-    return [...this.items.values()].filter(
+    const found = [...this.items.values()].filter(
       (document) =>
         (categoryIds === 'ALL' || categoryIds.includes(document.categoryId)) &&
         (clientId === undefined || document.clientId === clientId) &&
@@ -100,6 +107,7 @@ export class InMemoryDocumentRepository implements DocumentRepository {
           document.name.value.toLowerCase().includes(needle) ||
           document.description.toLowerCase().includes(needle)),
     )
+    return paginate(found, page)
   }
 }
 
@@ -112,13 +120,14 @@ export class InMemoryBackupRepository implements BackupRepository {
     this.items.push(backup)
   }
 
-  async findHistory() {
-    return [...this.items]
+  async findHistory(page: PageRequest) {
+    const history = [...this.items]
       .sort((a, b) => b.performedAt.getTime() - a.performedAt.getTime())
       .map((backup) => ({
         backup,
         responsibleName: this.responsibleNames.get(backup.responsibleId) ?? '',
       }))
+    return paginate(history, page)
   }
 }
 

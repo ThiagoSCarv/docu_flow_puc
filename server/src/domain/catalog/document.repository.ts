@@ -1,3 +1,4 @@
+import type { Page, PageRequest } from '../../shared/utils/pagination.js'
 import type { CategoryScope } from './category-access.policy.js'
 import type { Document } from './document.entity.js'
 import type { DocumentName } from './document-name.value-object.js'
@@ -13,5 +14,5 @@ export type DocumentSearchCriteria = {
 export interface DocumentRepository {
   save(document: Document): Promise<void>
   existsWithName(name: DocumentName): Promise<boolean>
-  search(criteria: DocumentSearchCriteria): Promise<Document[]>
+  search(criteria: DocumentSearchCriteria, page: PageRequest): Promise<Page<Document>>
 }

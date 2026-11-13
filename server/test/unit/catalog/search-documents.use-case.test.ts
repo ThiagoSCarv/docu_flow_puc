@@ -8,7 +8,7 @@ import { Document } from '../../../src/domain/catalog/document.entity.js'
 import { DocumentName } from '../../../src/domain/catalog/document-name.value-object.js'
 import { Period } from '../../../src/domain/catalog/period.value-object.js'
 import { UserRole } from '../../../src/shared/utils/enums.js'
-import { InMemoryDocumentRepository } from '../../helpers/fakes.js'
+import { ALL_ITEMS, InMemoryDocumentRepository } from '../../helpers/fakes.js'
 
 const FISCAIS = 'cat-fiscais'
 const CONTABEIS = 'cat-contabeis'
@@ -46,8 +46,11 @@ describe('SearchDocumentsUseCase', () => {
   const guiaImposto = documentOf(FISCAIS, CLIENTE_B, '2026-04', 'Guia de imposto')
   const balanco = documentOf(CONTABEIS, CLIENTE_A, '2026-03', 'Balanço patrimonial')
 
-  const search = (overrides: Partial<SearchDocumentsInput> = {}) =>
-    useCase.execute({ actor: FUNCIONARIO, ...overrides })
+  const searchPage = (overrides: Partial<SearchDocumentsInput> = {}) =>
+    useCase.execute({ actor: FUNCIONARIO, page: ALL_ITEMS, ...overrides })
+
+  const search = async (overrides: Partial<SearchDocumentsInput> = {}) =>
+    (await searchPage(overrides)).items
 
   const namesOf = (found: { name: string }[]) => found.map((document) => document.name).sort()
 
@@ -91,6 +94,17 @@ describe('SearchDocumentsUseCase', () => {
   it('combina os filtros', async () => {
     const found = await search({ actor: ADMIN, clientId: CLIENTE_A, categoryId: CONTABEIS })
     expect(namesOf(found)).toEqual([balanco.name.value])
+  })
+
+  it('devolve só a página pedida, com o total de documentos visíveis', async () => {
+    const page = await searchPage({ actor: ADMIN, page: { limit: 2, offset: 2 } })
+    expect(page.items).toHaveLength(1)
+    expect(page.total).toBe(3)
+  })
+
+  it('sem categorias permitidas devolve página vazia com total zero', async () => {
+    const page = await searchPage({ actor: { ...FUNCIONARIO, allowedCategoryIds: [] } })
+    expect(page).toEqual({ items: [], total: 0 })
   })
 
   it('rejeita período inválido', async () => {

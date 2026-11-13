@@ -3,7 +3,13 @@ import { z } from 'zod'
 import type { CreateDocumentUseCase } from '../../../application/catalog/create-document.use-case.js'
 import type { SearchDocumentsUseCase } from '../../../application/catalog/search-documents.use-case.js'
 import { UserRole } from '../../../shared/utils/enums.js'
-import { bearerAuth, documentSchema, messageSchema } from '../schemas.js'
+import {
+  bearerAuth,
+  documentSchema,
+  messageSchema,
+  pageSchema,
+  paginationQuerySchema,
+} from '../schemas.js'
 
 type DocumentRoutesOptions = {
   createDocument: CreateDocumentUseCase
@@ -33,16 +39,23 @@ export const documentRoutes: FastifyPluginAsyncZod<DocumentRoutesOptions> = asyn
         tags: ['documents'],
         summary: 'Pesquisa documentos nas categorias que o usuário pode ver (ADMIN vê todas)',
         security: bearerAuth,
-        querystring: z.object({
+        querystring: paginationQuerySchema.extend({
           search: optionalText(SEARCH_MAX_LENGTH).describe('Trecho do nome ou da descrição'),
           categoryId: z.uuid().optional(),
           clientId: z.uuid().optional(),
           period: optionalText(7).describe('AAAA-MM'),
         }),
-        response: { 200: z.array(documentSchema), 400: messageSchema, 401: messageSchema },
+        response: { 200: pageSchema(documentSchema), 400: messageSchema, 401: messageSchema },
       },
     },
-    (request) => searchDocuments.execute({ ...request.query, actor: request.user }),
+    (request) => {
+      const { limit, offset, ...filters } = request.query
+      return searchDocuments.execute({
+        ...filters,
+        page: { limit, offset },
+        actor: request.user,
+      })
+    },
   )
 
   app.post(

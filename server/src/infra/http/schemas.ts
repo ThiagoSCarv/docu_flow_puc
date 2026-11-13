@@ -58,4 +58,24 @@ export const securityGuidelineSchema = z.object({
 
 export const messageSchema = z.object({ message: z.string() })
 
+export const DEFAULT_PAGE_SIZE = 50
+export const MAX_PAGE_SIZE = 100
+
+export const paginationQuerySchema = z.object({
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(MAX_PAGE_SIZE)
+    .default(DEFAULT_PAGE_SIZE)
+    .describe(`Itens por página (padrão ${DEFAULT_PAGE_SIZE}, máximo ${MAX_PAGE_SIZE})`),
+  offset: z.coerce.number().int().min(0).default(0).describe('Quantos itens pular'),
+})
+
+export const pageSchema = <T extends z.ZodType>(itemSchema: T) =>
+  z.object({
+    items: z.array(itemSchema),
+    total: z.number().int().describe('Total de itens que o usuário pode ver, sem paginação'),
+  })
+
 export const bearerAuth = [{ bearerAuth: [] }]
