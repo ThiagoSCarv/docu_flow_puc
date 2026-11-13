@@ -37,10 +37,10 @@ if (withDemoData && env.SEED_DEMO_PASSWORD) {
     .select({ id: users.id, name: users.name })
     .from(users)
     .where(eq(users.email, email.value))
-  const applied = await seedDemoData(db, { admin, password: env.SEED_DEMO_PASSWORD })
+  const summary = await seedDemoData(db, { admin, password: env.SEED_DEMO_PASSWORD })
   console.log(
-    applied
-      ? 'Dados de demonstração criados: usuários, clientes, documentos e backups fictícios.'
+    summary
+      ? `Dados de demonstração criados: ${summary.users} usuários, ${summary.clients} clientes, ${summary.documents} documentos e ${summary.backups} backups fictícios.`
       : 'Dados de demonstração já existiam; nada foi alterado.',
   )
 }
