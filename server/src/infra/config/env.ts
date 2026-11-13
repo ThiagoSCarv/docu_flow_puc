@@ -24,6 +24,7 @@ const envSchema = z.object({
     ),
   SEED_ADMIN_EMAIL: z.email().optional(),
   SEED_ADMIN_PASSWORD: z.string().optional(),
+  SEED_DEMO_PASSWORD: z.string().optional(),
 })
 
 const parsed = envSchema.safeParse(process.env)
