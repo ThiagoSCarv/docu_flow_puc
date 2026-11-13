@@ -74,8 +74,18 @@ O Fastify serve o build do React (`web/dist`) e a API com o mesmo certificado, n
 npm run db:up                      # sobe o PostgreSQL no Docker
 npm run db:migrate -w server       # cria/atualiza as tabelas
 npm run db:seed -w server          # categorias iniciais + admin (SEED_ADMIN_* do .env)
+npm run db:seed:demo -w server     # o mesmo + dados fictícios para testar (SEED_DEMO_PASSWORD do .env)
 npm run db:down                    # derruba
 ```
+
+O `db:seed:demo` deixa o banco pronto para testar e demonstrar. Ele passa pelas mesmas regras da API: os nomes padronizados são gerados pelo servidor e cada criação entra no log de atividades. Rodar de novo não duplica nada, e tudo é fictício:
+
+- **Usuários** (senha `SEED_DEMO_PASSWORD`, `demo12345` no `.env.example`): `funcionario@exemplo.com` (FUNCIONARIO, categorias Contábeis, Fiscais e Financeiros) e `consulta@exemplo.com` (CONSULTA, Contábeis e Fiscais). O admin continua sendo o do `SEED_ADMIN_*`.
+- **Clientes:** Empresa Exemplo A, Empresa Exemplo B, Comércio Exemplo C e Cliente D (MEI).
+- **Documentos:** 13, espalhados pelas seis categorias e por períodos de 2026, com links fictícios em `nuvem.exemplo.com`.
+- **Backups:** 4 registros entre agosto e outubro de 2026, com as situações `VERIFICADO`, `REALIZADO` e `FALHOU`.
+
+Entrar com cada perfil mostra a restrição por categoria: o FUNCIONARIO não vê Contratos, Administrativos nem Outros, e o CONSULTA vê só Contábeis e Fiscais.
 
 O PostgreSQL do Docker sobe com SSL ligado, usando o mesmo certificado de `certs/` (rode `npm run certs` antes do `db:up`). Com `DATABASE_SSL=true` no `server/.env`, o servidor se conecta ao banco por TLS e confia só no `certs/cert.pem`: um certificado diferente faz a conexão falhar. Para conferir na demonstração, com o servidor rodando e depois de pelo menos uma requisição (ex.: login):
 
