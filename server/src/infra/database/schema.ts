@@ -58,7 +58,7 @@ export const documents = pgTable(
   'documents',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    name: text('name').notNull(),
+    name: text('name').notNull().unique(),
     description: text('description'),
     period: varchar('period', { length: 7 }).notNull(),
     cloudLocation: text('cloud_location').notNull(),

@@ -42,6 +42,12 @@ export class ClientCodeAlreadyInUseError extends DomainError {
   }
 }
 
+export class DocumentNameAlreadyInUseError extends DomainError {
+  constructor() {
+    super('Já existe um documento com este nome padronizado')
+  }
+}
+
 export class InvalidDocumentNameError extends DomainError {
   constructor(part: string) {
     super(`Não foi possível padronizar o nome do documento: ${part} sem letras ou números`)

@@ -66,6 +66,7 @@ export const documentRoutes: FastifyPluginAsyncZod<DocumentRoutesOptions> = asyn
           400: messageSchema,
           401: messageSchema,
           403: messageSchema,
+          409: messageSchema,
         },
       },
     },

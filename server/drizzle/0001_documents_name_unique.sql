@@ -1,0 +1,1 @@
+ALTER TABLE "documents" ADD CONSTRAINT "documents_name_unique" UNIQUE("name");

@@ -1,6 +1,7 @@
 import type { ActivityLogRepository } from '../../domain/audit/activity-log.repository.js'
 import {
   CategoryNotAllowedError,
+  DocumentNameAlreadyInUseError,
   InactiveClientError,
   UnknownCategoryError,
   UnknownClientError,
@@ -45,14 +46,17 @@ export class CreateDocumentUseCase {
     const category = await this.categories.findById(input.categoryId)
     if (!category) throw new UnknownCategoryError()
 
+    const name = DocumentName.create({
+      clientCode: client.code,
+      categoryCode: category.code,
+      period,
+      description: input.description,
+    })
+    await this.ensureNameIsAvailable(name)
+
     const document = Document.create(
       {
-        name: DocumentName.create({
-          clientCode: client.code,
-          categoryCode: category.code,
-          period,
-          description: input.description,
-        }),
+        name,
         description: input.description,
         period,
         cloudLocation: input.cloudLocation,
@@ -72,6 +76,10 @@ export class CreateDocumentUseCase {
     })
 
     return toDocumentDto(document)
+  }
+
+  private async ensureNameIsAvailable(name: DocumentName): Promise<void> {
+    if (await this.documents.existsWithName(name)) throw new DocumentNameAlreadyInUseError()
   }
 
   private async findActiveClient(clientId: string) {

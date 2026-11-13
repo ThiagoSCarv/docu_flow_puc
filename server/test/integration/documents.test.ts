@@ -75,7 +75,9 @@ describe('POST /api/documents', () => {
   })
 
   it('registra o cadastro no log de atividades', async () => {
-    const { id } = (await post(funcionarioToken, novoDocumento())).json()
+    const { id } = (
+      await post(funcionarioToken, novoDocumento({ description: 'Recibo de pagamento' }))
+    ).json()
 
     const [log] = await ctx.db.select().from(activityLogs).where(eq(activityLogs.entityId, id))
     expect(log).toMatchObject({
@@ -89,6 +91,25 @@ describe('POST /api/documents', () => {
 
     expect(response.statusCode).toBe(201)
     expect(response.json().name).toBe('CLIA_CONT_2026-03_nota-fiscal-de-servico')
+  })
+
+  it('nome padronizado repetido retorna 409 sem gravar outro documento', async () => {
+    const payload = novoDocumento({ description: 'Contrato social' })
+    expect((await post(funcionarioToken, payload)).statusCode).toBe(201)
+
+    const response = await post(funcionarioToken, {
+      ...payload,
+      description: 'CONTRATO   SOCIAL',
+      cloudLocation: 'https://nuvem.exemplo.com/outro-link.pdf',
+    })
+
+    expect(response.statusCode).toBe(409)
+    expect(response.json()).toEqual({ message: 'Já existe um documento com este nome padronizado' })
+    const stored = await ctx.db
+      .select()
+      .from(documents)
+      .where(eq(documents.name, 'CLIA_FIS_2026-03_contrato-social'))
+    expect(stored).toHaveLength(1)
   })
 
   it('FUNCIONARIO recebe 403 ao cadastrar em categoria não permitida', async () => {

@@ -54,4 +54,13 @@ describe('User', () => {
     expect(user.failedLoginAttempts).toBe(0)
     expect(user.lockedUntil).toBeNull()
   })
+
+  it('redefinir a senha troca o hash e desbloqueia a conta', () => {
+    const user = createUser()
+    for (let i = 0; i < MAX_FAILED_LOGIN_ATTEMPTS; i++) user.registerFailedLogin(now)
+    user.resetPassword('novo-hash')
+    expect(user.passwordHash).toBe('novo-hash')
+    expect(user.failedLoginAttempts).toBe(0)
+    expect(user.isLockedAt(now)).toBe(false)
+  })
 })
