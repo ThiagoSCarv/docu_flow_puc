@@ -5,6 +5,7 @@ import {
 } from '../../../src/application/catalog/create-document.use-case.js'
 import {
   CategoryNotAllowedError,
+  DocumentNameAlreadyInUseError,
   InactiveClientError,
   InvalidPeriodError,
   UnknownCategoryError,
@@ -111,6 +112,16 @@ describe('CreateDocumentUseCase', () => {
     await expect(useCase.execute(input({ actor: consulta }))).rejects.toBeInstanceOf(
       CategoryNotAllowedError,
     )
+  })
+
+  it('recusa nome padronizado repetido sem gravar nem registrar no log', async () => {
+    await useCase.execute(input())
+
+    await expect(
+      useCase.execute(input({ description: 'NOTA fiscal de serviço!' })),
+    ).rejects.toBeInstanceOf(DocumentNameAlreadyInUseError)
+    expect(documents.items.size).toBe(1)
+    expect(activityLog.entries).toHaveLength(1)
   })
 
   it('rejeita período inválido', async () => {

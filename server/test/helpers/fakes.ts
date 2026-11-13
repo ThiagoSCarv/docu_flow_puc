@@ -15,6 +15,7 @@ import type {
   DocumentRepository,
   DocumentSearchCriteria,
 } from '../../src/domain/catalog/document.repository.js'
+import type { DocumentName } from '../../src/domain/catalog/document-name.value-object.js'
 import type { Email } from '../../src/domain/identity/email.value-object.js'
 import type { User } from '../../src/domain/identity/user.entity.js'
 import type { UserRepository } from '../../src/domain/identity/user.repository.js'
@@ -82,6 +83,10 @@ export class InMemoryDocumentRepository implements DocumentRepository {
 
   async save(document: Document) {
     this.items.set(document.id, document)
+  }
+
+  async existsWithName(name: DocumentName) {
+    return [...this.items.values()].some((document) => document.name.value === name.value)
   }
 
   async search({ text, categoryIds, clientId, period }: DocumentSearchCriteria) {

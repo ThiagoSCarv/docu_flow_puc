@@ -30,6 +30,15 @@ export class DrizzleDocumentRepository implements DocumentRepository {
     })
   }
 
+  async existsWithName(name: DocumentName): Promise<boolean> {
+    const [row] = await this.db
+      .select({ id: documents.id })
+      .from(documents)
+      .where(eq(documents.name, name.value))
+      .limit(1)
+    return row !== undefined
+  }
+
   async search(criteria: DocumentSearchCriteria): Promise<Document[]> {
     const rows = await this.db
       .select()

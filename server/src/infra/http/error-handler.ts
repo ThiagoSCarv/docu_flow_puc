@@ -3,6 +3,7 @@ import { BackupInFutureError } from '../../domain/backup/backup.errors.js'
 import {
   CategoryNotAllowedError,
   ClientCodeAlreadyInUseError,
+  DocumentNameAlreadyInUseError,
   InactiveClientError,
   InvalidClientCodeError,
   InvalidDocumentNameError,
@@ -41,6 +42,7 @@ const HTTP_STATUS_BY_ERROR = new Map<DomainErrorClass, number>([
   [CategoryNotAllowedError, 403],
   [EmailAlreadyInUseError, 409],
   [ClientCodeAlreadyInUseError, 409],
+  [DocumentNameAlreadyInUseError, 409],
   [AccountLockedError, 423],
 ])
 
