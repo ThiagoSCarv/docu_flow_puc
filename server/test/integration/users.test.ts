@@ -144,8 +144,9 @@ describe('/api/users', () => {
     })
     expect(response.statusCode).toBe(200)
     const body = response.json()
-    expect(body).toHaveLength(4)
-    for (const user of body) expect(user).not.toHaveProperty('passwordHash')
+    expect(body.total).toBe(4)
+    expect(body.items).toHaveLength(4)
+    for (const user of body.items) expect(user).not.toHaveProperty('passwordHash')
   })
 
   it('FUNCIONARIO recebe 403 ao listar usuários', async () => {

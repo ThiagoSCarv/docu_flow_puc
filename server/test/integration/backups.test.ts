@@ -76,7 +76,8 @@ describe('/api/backups', () => {
     )
     const response = await get(consultaToken)
     expect(response.statusCode).toBe(200)
-    const history = response.json()
+    const history = response.json().items
+    expect(response.json().total).toBe(2)
     expect(history.map((backup: { status: string }) => backup.status)).toEqual([
       BackupStatus.VERIFICADO,
       BackupStatus.REALIZADO,
@@ -87,7 +88,7 @@ describe('/api/backups', () => {
   it('FUNCIONARIO vê o responsável só com id e nome', async () => {
     const response = await get(funcionarioToken)
     expect(response.statusCode).toBe(200)
-    expect(Object.keys(response.json()[0].responsible).sort()).toEqual(['id', 'name'])
+    expect(Object.keys(response.json().items[0].responsible).sort()).toEqual(['id', 'name'])
   })
 
   it('data no futuro retorna 400', async () => {

@@ -10,6 +10,7 @@ import {
 import { Client } from '../../../src/domain/catalog/client.entity.js'
 import { ActivityAction, ActivityEntity } from '../../../src/shared/utils/enums.js'
 import {
+  ALL_ITEMS,
   FixedClock,
   InMemoryActivityLogRepository,
   InMemoryClientRepository,
@@ -77,6 +78,6 @@ describe('CreateClientUseCase', () => {
     await expect(useCase.execute(input({ code: 'COM ESPACO' }))).rejects.toBeInstanceOf(
       InvalidClientCodeError,
     )
-    expect(await clients.findAll()).toHaveLength(1)
+    expect((await clients.list(ALL_ITEMS)).total).toBe(1)
   })
 })

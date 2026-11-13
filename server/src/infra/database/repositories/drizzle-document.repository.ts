@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike, inArray, or, type SQL } from 'drizzle-orm'
+import { and, count, desc, eq, ilike, inArray, or, type SQL } from 'drizzle-orm'
 import { Document } from '../../../domain/catalog/document.entity.js'
 import type {
   DocumentRepository,
@@ -6,6 +6,7 @@ import type {
 } from '../../../domain/catalog/document.repository.js'
 import { DocumentName } from '../../../domain/catalog/document-name.value-object.js'
 import { Period } from '../../../domain/catalog/period.value-object.js'
+import type { Page, PageRequest } from '../../../shared/utils/pagination.js'
 import { documents } from '../schema.js'
 import type { Database } from '../types.js'
 
@@ -39,13 +40,19 @@ export class DrizzleDocumentRepository implements DocumentRepository {
     return row !== undefined
   }
 
-  async search(criteria: DocumentSearchCriteria): Promise<Document[]> {
-    const rows = await this.db
-      .select()
-      .from(documents)
-      .where(and(...this.conditionsFor(criteria)))
-      .orderBy(desc(documents.createdAt))
-    return rows.map((row) => this.toEntity(row))
+  async search(criteria: DocumentSearchCriteria, page: PageRequest): Promise<Page<Document>> {
+    const where = and(...this.conditionsFor(criteria))
+    const [rows, [{ total }]] = await Promise.all([
+      this.db
+        .select()
+        .from(documents)
+        .where(where)
+        .orderBy(desc(documents.createdAt), desc(documents.id))
+        .limit(page.limit)
+        .offset(page.offset),
+      this.db.select({ total: count() }).from(documents).where(where),
+    ])
+    return { items: rows.map((row) => this.toEntity(row)), total }
   }
 
   private conditionsFor({ text, categoryIds, clientId, period }: DocumentSearchCriteria) {

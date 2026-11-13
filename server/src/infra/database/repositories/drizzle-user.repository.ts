@@ -1,7 +1,8 @@
-import { asc, eq, inArray } from 'drizzle-orm'
+import { asc, count, eq, inArray } from 'drizzle-orm'
 import { Email } from '../../../domain/identity/email.value-object.js'
 import { User } from '../../../domain/identity/user.entity.js'
 import type { UserRepository } from '../../../domain/identity/user.repository.js'
+import type { Page, PageRequest } from '../../../shared/utils/pagination.js'
 import { userCategoryPermissions, users } from '../schema.js'
 import type { Database } from '../types.js'
 
@@ -20,10 +21,19 @@ export class DrizzleUserRepository implements UserRepository {
     return row ? this.toEntity(row) : null
   }
 
-  async findAll(): Promise<User[]> {
-    const rows = await this.db.select().from(users).orderBy(asc(users.name))
+  async list(page: PageRequest): Promise<Page<User>> {
+    const [rows, [{ total }]] = await Promise.all([
+      this.db
+        .select()
+        .from(users)
+        .orderBy(asc(users.name), asc(users.id))
+        .limit(page.limit)
+        .offset(page.offset),
+      this.db.select({ total: count() }).from(users),
+    ])
     const categoryIdsByUser = await this.loadAllowedCategoryIds(rows.map((row) => row.id))
-    return rows.map((row) => this.restore(row, categoryIdsByUser.get(row.id) ?? []))
+    const items = rows.map((row) => this.restore(row, categoryIdsByUser.get(row.id) ?? []))
+    return { items, total }
   }
 
   async save(user: User): Promise<void> {

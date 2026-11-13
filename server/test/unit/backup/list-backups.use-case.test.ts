@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ListBackupsUseCase } from '../../../src/application/backup/list-backups.use-case.js'
 import { Backup } from '../../../src/domain/backup/backup.entity.js'
 import { BackupStatus } from '../../../src/shared/utils/enums.js'
-import { InMemoryBackupRepository } from '../../helpers/fakes.js'
+import { ALL_ITEMS, InMemoryBackupRepository } from '../../helpers/fakes.js'
 
 const backupAt = (performedAt: string, status: BackupStatus) =>
   Backup.restore({
@@ -20,12 +20,13 @@ describe('ListBackupsUseCase', () => {
     await backups.save(backupAt('2026-11-01T10:00:00Z', BackupStatus.REALIZADO))
     await backups.save(backupAt('2026-11-08T10:00:00Z', BackupStatus.FALHOU))
 
-    const history = await new ListBackupsUseCase(backups).execute()
+    const history = await new ListBackupsUseCase(backups).execute(ALL_ITEMS)
 
-    expect(history.map((backup) => backup.status)).toEqual([
+    expect(history.items.map((backup) => backup.status)).toEqual([
       BackupStatus.FALHOU,
       BackupStatus.REALIZADO,
     ])
-    expect(history[0].responsible).toEqual({ id: 'admin-id', name: 'Administrador' })
+    expect(history.items[0].responsible).toEqual({ id: 'admin-id', name: 'Administrador' })
+    expect(history.total).toBe(2)
   })
 })

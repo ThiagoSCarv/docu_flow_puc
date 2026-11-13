@@ -3,7 +3,13 @@ import { z } from 'zod'
 import type { CreateClientUseCase } from '../../../application/catalog/create-client.use-case.js'
 import type { ListClientsUseCase } from '../../../application/catalog/list-clients.use-case.js'
 import { UserRole } from '../../../shared/utils/enums.js'
-import { bearerAuth, clientSchema, messageSchema } from '../schemas.js'
+import {
+  bearerAuth,
+  clientSchema,
+  messageSchema,
+  pageSchema,
+  paginationQuerySchema,
+} from '../schemas.js'
 
 type ClientRoutesOptions = { createClient: CreateClientUseCase; listClients: ListClientsUseCase }
 
@@ -17,12 +23,13 @@ export const clientRoutes: FastifyPluginAsyncZod<ClientRoutesOptions> = async (
       onRequest: [app.authenticate],
       schema: {
         tags: ['clients'],
-        summary: 'Lista os clientes do escritório',
+        summary: 'Lista os clientes do escritório, em ordem alfabética',
         security: bearerAuth,
-        response: { 200: z.array(clientSchema), 401: messageSchema },
+        querystring: paginationQuerySchema,
+        response: { 200: pageSchema(clientSchema), 400: messageSchema, 401: messageSchema },
       },
     },
-    () => listClients.execute(),
+    (request) => listClients.execute(request.query),
   )
 
   app.post(

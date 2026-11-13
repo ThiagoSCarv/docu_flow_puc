@@ -3,7 +3,14 @@ import { z } from 'zod'
 import type { ListBackupsUseCase } from '../../../application/backup/list-backups.use-case.js'
 import type { RegisterBackupUseCase } from '../../../application/backup/register-backup.use-case.js'
 import { UserRole } from '../../../shared/utils/enums.js'
-import { backupSchema, backupStatusSchema, bearerAuth, messageSchema } from '../schemas.js'
+import {
+  backupSchema,
+  backupStatusSchema,
+  bearerAuth,
+  messageSchema,
+  pageSchema,
+  paginationQuerySchema,
+} from '../schemas.js'
 
 type BackupRoutesOptions = {
   registerBackup: RegisterBackupUseCase
@@ -22,10 +29,11 @@ export const backupRoutes: FastifyPluginAsyncZod<BackupRoutesOptions> = async (
         tags: ['backups'],
         summary: 'Histórico de backups, do mais recente ao mais antigo',
         security: bearerAuth,
-        response: { 200: z.array(backupSchema), 401: messageSchema },
+        querystring: paginationQuerySchema,
+        response: { 200: pageSchema(backupSchema), 400: messageSchema, 401: messageSchema },
       },
     },
-    () => listBackups.execute(),
+    (request) => listBackups.execute(request.query),
   )
 
   app.post(

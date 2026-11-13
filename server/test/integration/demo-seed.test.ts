@@ -43,10 +43,10 @@ describe('seed de dados de demonstração', () => {
   async function listDocumentNames(token: string) {
     const response = await ctx.app.inject({
       method: 'GET',
-      url: '/api/documents',
+      url: '/api/documents?limit=100',
       headers: { authorization: `Bearer ${token}` },
     })
-    return (response.json() as { name: string }[]).map((document) => document.name)
+    return (response.json().items as { name: string }[]).map((document) => document.name)
   }
 
   it('na escala padrão gera mil clientes e o restante na mesma proporção', () => {

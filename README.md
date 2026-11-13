@@ -124,6 +124,7 @@ Todas sob `/api`. As permissões são verificadas no servidor. Perfis: `ADMIN`, 
 
 Regras de negócio que o front precisa conhecer:
 
+- **Paginação:** `GET /users`, `/clients`, `/documents` e `/backups` respondem `{ "items": [...], "total": N }`, não um array. Use `?limit=50&offset=0`: o `limit` vai de 1 a 100 (padrão 50) e o `offset` começa em 0. Fora disso, a resposta é 400. O `total` conta tudo o que o usuário pode ver com os filtros aplicados, para montar "página X de Y". A ordem é estável, então páginas seguidas não repetem nem pulam itens. `/categories` e `/security-guidelines` continuam devolvendo array.
 - **Categorias:** o ADMIN vê todas; os demais perfis só as que o ADMIN liberou no cadastro do usuário. Sem categorias liberadas, a busca de documentos volta vazia. Filtrar por uma categoria não liberada também devolve lista vazia, sem 403.
 - **Clientes:** o código é convertido para maiúsculas e aceita só letras, números e `-`, com até 20 caracteres. Código repetido retorna 409.
 - **Documentos:** o nome é gerado pelo servidor no padrão `CLIENTE_CATEGORIA_AAAA-MM_descricao` (ex.: `EMPRESA-EXEMPLO_CONT_2026-03_balanco-patrimonial`). O período segue o formato `AAAA-MM`, e o link da nuvem precisa começar com `https://`. Cliente inativo não recebe documentos novos.

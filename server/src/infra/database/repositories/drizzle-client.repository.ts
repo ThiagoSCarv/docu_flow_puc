@@ -1,15 +1,24 @@
-import { asc, eq } from 'drizzle-orm'
+import { asc, count, eq } from 'drizzle-orm'
 import { Client } from '../../../domain/catalog/client.entity.js'
 import type { ClientRepository } from '../../../domain/catalog/client.repository.js'
+import type { Page, PageRequest } from '../../../shared/utils/pagination.js'
 import { clients } from '../schema.js'
 import type { Database } from '../types.js'
 
 export class DrizzleClientRepository implements ClientRepository {
   constructor(private readonly db: Database) {}
 
-  async findAll(): Promise<Client[]> {
-    const rows = await this.db.select().from(clients).orderBy(asc(clients.name))
-    return rows.map((row) => Client.restore(row))
+  async list(page: PageRequest): Promise<Page<Client>> {
+    const [rows, [{ total }]] = await Promise.all([
+      this.db
+        .select()
+        .from(clients)
+        .orderBy(asc(clients.name), asc(clients.id))
+        .limit(page.limit)
+        .offset(page.offset),
+      this.db.select({ total: count() }).from(clients),
+    ])
+    return { items: rows.map((row) => Client.restore(row)), total }
   }
 
   async findById(id: string): Promise<Client | null> {
