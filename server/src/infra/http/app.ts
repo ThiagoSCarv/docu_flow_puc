@@ -14,6 +14,7 @@ import type { Database } from '../database/types.js'
 import { createUseCases } from './composition-root.js'
 import { errorHandler } from './error-handler.js'
 import { authPlugin } from './plugins/auth.plugin.js'
+import { webAppPlugin } from './plugins/web-app.plugin.js'
 import { authRoutes } from './routes/auth.routes.js'
 import { backupRoutes } from './routes/backups.routes.js'
 import { categoryRoutes } from './routes/categories.routes.js'
@@ -29,9 +30,10 @@ export type AppOptions = FastifyServerOptions & {
   db: Database
   jwtSecret: string
   https?: HttpsOptions
+  webDistDir?: string
 }
 
-export async function buildApp({ db, jwtSecret, ...options }: AppOptions) {
+export async function buildApp({ db, jwtSecret, webDistDir, ...options }: AppOptions) {
   const app = Fastify(options as FastifyServerOptions).withTypeProvider<ZodTypeProvider>()
   const useCases = createUseCases(db)
 
@@ -80,6 +82,8 @@ export async function buildApp({ db, jwtSecret, ...options }: AppOptions) {
     prefix: API_PREFIX,
     listSecurityGuidelines: useCases.listSecurityGuidelines,
   })
+
+  if (webDistDir) await app.register(webAppPlugin, { root: webDistDir })
 
   return app
 }

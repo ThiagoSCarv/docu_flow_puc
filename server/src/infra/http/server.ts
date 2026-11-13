@@ -17,6 +17,7 @@ const app = await buildApp({
   jwtSecret: env.JWT_SECRET,
   logger: true,
   https: { key: readFileSync(keyPath), cert: readFileSync(certPath) },
+  webDistDir: existsSync(env.WEB_DIST_DIR) ? env.WEB_DIST_DIR : undefined,
 })
 app.addHook('onClose', () => pool.end())
 

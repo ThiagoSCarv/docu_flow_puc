@@ -59,6 +59,15 @@ O navegador vai avisar que o certificado é autoassinado. Aceite uma vez para `l
 
 Para conferir: abra https://localhost:5173. A tela deve mostrar `API: ok`.
 
+### Demonstração (front e API na mesma origem)
+
+```bash
+npm run db:up
+npm run demo         # build do web e do server, depois sobe tudo em https://localhost:3333
+```
+
+O Fastify serve o build do React (`web/dist`) e a API com o mesmo certificado, na mesma origem: front em `https://localhost:3333`, API em `/api` e docs em `/docs`. Recarregar a página em qualquer rota do front (ex.: `/documentos`) funciona, porque o servidor devolve o `index.html`. Sem `web/dist`, o servidor sobe só com a API, como no `dev:server`.
+
 ### Banco de dados
 
 ```bash
@@ -72,8 +81,8 @@ Ao alterar `server/src/infra/database/schema.ts`, gere a migration com `npm run 
 
 ## Comunicação entre web e server
 
-- **Prefixo `/api`:** todas as rotas da API começam com `/api` (ex.: `/api/health`, `/api/auth/login`). Assim elas não colidem com as rotas do React Router quando o Fastify passar a servir o build do front.
-- **Caminhos relativos:** o front chama sempre `fetch('/api/...')`. Em desenvolvimento, o Vite repassa essas chamadas para `https://localhost:3333` (proxy). Em produção, front e API ficam na mesma origem. Nos dois casos não há CORS nem URL fixa no código. Para apontar para outra API em dev: `API_URL=https://outro-host npm run dev:web`.
+- **Prefixo `/api`:** todas as rotas da API começam com `/api` (ex.: `/api/health`, `/api/auth/login`). Assim elas não colidem com as rotas do React Router quando o Fastify serve o build do front. Rota inexistente sob `/api` devolve 404 em JSON.
+- **Caminhos relativos:** o front chama sempre `fetch('/api/...')`. Em desenvolvimento, o Vite repassa essas chamadas para `https://localhost:3333` (proxy). Na demonstração (`npm run demo`), front e API ficam na mesma origem. Nos dois casos não há CORS nem URL fixa no código. Para apontar para outra API em dev: `API_URL=https://outro-host npm run dev:web`.
 - **Contrato:** a documentação OpenAPI em **https://localhost:3333/docs** é gerada automaticamente a partir dos schemas Zod das rotas. É a referência do front para formatos de requisição e resposta.
 - **Autenticação:** `POST /api/auth/login` com `{ email, password }` devolve `{ token }`, válido por 1 hora. As demais rotas recebem o header `Authorization: Bearer <token>`. `GET /api/auth/me` devolve o usuário logado (nome, e-mail, perfil). Respostas: 401 para credenciais inválidas ou token ausente/expirado, 403 para perfil sem permissão, 423 para conta bloqueada após 5 tentativas (15 minutos), 429 para mais de 10 tentativas de login por minuto. No `/docs`, use o botão **Authorize** com o token para testar as rotas protegidas.
 - **Health check:** `GET /api/health` retorna `{ "status": "ok" }` e serve para confirmar que o cliente alcança o servidor via HTTPS.
@@ -124,6 +133,7 @@ Os testes montam a aplicação com `buildApp()` e fazem requisições com `app.i
 | Comando             | O que faz                                       |
 | ------------------- | ----------------------------------------------- |
 | `npm run certs`     | Gera os certificados de `certs/`                |
+| `npm run demo`      | Build do web e do server e sobe tudo na 3333    |
 | `npm run check`     | Biome (lint + formatação) em todo o repo        |
 | `npm run check:fix` | Corrige o que o Biome consegue corrigir sozinho |
 | `npm run typecheck` | TypeScript em `server` e `web`                  |
