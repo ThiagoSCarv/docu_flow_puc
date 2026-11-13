@@ -10,6 +10,7 @@ import {
   validatorCompiler,
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod'
+import { z } from 'zod'
 import type { Database } from '../database/types.js'
 import { createUseCases } from './composition-root.js'
 import { errorHandler } from './error-handler.js'
@@ -37,6 +38,7 @@ export async function buildApp({ db, jwtSecret, webDistDir, ...options }: AppOpt
   const app = Fastify(options as FastifyServerOptions).withTypeProvider<ZodTypeProvider>()
   const useCases = createUseCases(db)
 
+  z.config(z.locales.ptBR())
   app.setValidatorCompiler(validatorCompiler)
   app.setSerializerCompiler(serializerCompiler)
   app.setErrorHandler(errorHandler)

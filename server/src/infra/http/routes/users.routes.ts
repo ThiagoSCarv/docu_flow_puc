@@ -5,6 +5,7 @@ import type { ListUsersUseCase } from '../../../application/identity/list-users.
 import type { ResetUserPasswordUseCase } from '../../../application/identity/reset-user-password.use-case.js'
 import { UserRole } from '../../../shared/utils/enums.js'
 import {
+  badRequestSchema,
   bearerAuth,
   messageSchema,
   pageSchema,
@@ -35,7 +36,7 @@ export const userRoutes: FastifyPluginAsyncZod<UserRoutesOptions> = async (
         querystring: paginationQuerySchema,
         response: {
           200: pageSchema(userSchema),
-          400: messageSchema,
+          400: badRequestSchema,
           401: messageSchema,
           403: messageSchema,
         },
@@ -60,7 +61,7 @@ export const userRoutes: FastifyPluginAsyncZod<UserRoutesOptions> = async (
         }),
         response: {
           201: userSchema,
-          400: messageSchema,
+          400: badRequestSchema,
           401: messageSchema,
           403: messageSchema,
           409: messageSchema,
@@ -87,7 +88,7 @@ export const userRoutes: FastifyPluginAsyncZod<UserRoutesOptions> = async (
         body: z.object({ password: z.string() }),
         response: {
           204: z.null(),
-          400: messageSchema,
+          400: badRequestSchema,
           401: messageSchema,
           403: messageSchema,
           404: messageSchema,

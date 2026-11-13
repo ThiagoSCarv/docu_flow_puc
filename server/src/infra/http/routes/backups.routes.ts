@@ -6,6 +6,7 @@ import { UserRole } from '../../../shared/utils/enums.js'
 import {
   backupSchema,
   backupStatusSchema,
+  badRequestSchema,
   bearerAuth,
   messageSchema,
   pageSchema,
@@ -30,7 +31,7 @@ export const backupRoutes: FastifyPluginAsyncZod<BackupRoutesOptions> = async (
         summary: 'Histórico de backups, do mais recente ao mais antigo',
         security: bearerAuth,
         querystring: paginationQuerySchema,
-        response: { 200: pageSchema(backupSchema), 400: messageSchema, 401: messageSchema },
+        response: { 200: pageSchema(backupSchema), 400: badRequestSchema, 401: messageSchema },
       },
     },
     (request) => listBackups.execute(request.query),
@@ -52,7 +53,7 @@ export const backupRoutes: FastifyPluginAsyncZod<BackupRoutesOptions> = async (
         }),
         response: {
           201: backupSchema,
-          400: messageSchema,
+          400: badRequestSchema,
           401: messageSchema,
           403: messageSchema,
         },
