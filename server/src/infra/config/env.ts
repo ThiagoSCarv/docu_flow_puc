@@ -15,6 +15,7 @@ const envSchema = z.object({
     .string()
     .default(fileURLToPath(new URL('../../../../web/dist/', import.meta.url))),
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
+  DATABASE_SSL: z.stringbool().default(false),
   JWT_SECRET: z
     .string()
     .min(
