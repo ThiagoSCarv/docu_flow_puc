@@ -58,6 +58,10 @@ export const securityGuidelineSchema = z.object({
 
 export const messageSchema = z.object({ message: z.string() })
 
+export const badRequestSchema = messageSchema.extend({
+  fields: z.array(z.object({ field: z.string(), message: z.string() })).optional(),
+})
+
 export const DEFAULT_PAGE_SIZE = 50
 export const MAX_PAGE_SIZE = 100
 

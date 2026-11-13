@@ -4,6 +4,7 @@ import type { CreateClientUseCase } from '../../../application/catalog/create-cl
 import type { ListClientsUseCase } from '../../../application/catalog/list-clients.use-case.js'
 import { UserRole } from '../../../shared/utils/enums.js'
 import {
+  badRequestSchema,
   bearerAuth,
   clientSchema,
   messageSchema,
@@ -26,7 +27,7 @@ export const clientRoutes: FastifyPluginAsyncZod<ClientRoutesOptions> = async (
         summary: 'Lista os clientes do escritório, em ordem alfabética',
         security: bearerAuth,
         querystring: paginationQuerySchema,
-        response: { 200: pageSchema(clientSchema), 400: messageSchema, 401: messageSchema },
+        response: { 200: pageSchema(clientSchema), 400: badRequestSchema, 401: messageSchema },
       },
     },
     (request) => listClients.execute(request.query),
@@ -46,7 +47,7 @@ export const clientRoutes: FastifyPluginAsyncZod<ClientRoutesOptions> = async (
         }),
         response: {
           201: clientSchema,
-          400: messageSchema,
+          400: badRequestSchema,
           401: messageSchema,
           403: messageSchema,
           409: messageSchema,

@@ -1,7 +1,7 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import type { LoginUseCase } from '../../../application/identity/login.use-case.js'
-import { bearerAuth, messageSchema, userSchema } from '../schemas.js'
+import { badRequestSchema, bearerAuth, messageSchema, userSchema } from '../schemas.js'
 
 const LOGIN_RATE_LIMIT = { max: 10, timeWindow: '1 minute' }
 
@@ -18,6 +18,7 @@ export const authRoutes: FastifyPluginAsyncZod<AuthRoutesOptions> = async (app, 
         body: z.object({ email: z.email(), password: z.string().min(1) }),
         response: {
           200: z.object({ token: z.string() }),
+          400: badRequestSchema,
           401: messageSchema,
           423: messageSchema,
         },

@@ -4,6 +4,7 @@ import type { CreateDocumentUseCase } from '../../../application/catalog/create-
 import type { SearchDocumentsUseCase } from '../../../application/catalog/search-documents.use-case.js'
 import { UserRole } from '../../../shared/utils/enums.js'
 import {
+  badRequestSchema,
   bearerAuth,
   documentSchema,
   messageSchema,
@@ -45,7 +46,7 @@ export const documentRoutes: FastifyPluginAsyncZod<DocumentRoutesOptions> = asyn
           clientId: z.uuid().optional(),
           period: optionalText(7).describe('AAAA-MM'),
         }),
-        response: { 200: pageSchema(documentSchema), 400: messageSchema, 401: messageSchema },
+        response: { 200: pageSchema(documentSchema), 400: badRequestSchema, 401: messageSchema },
       },
     },
     (request) => {
@@ -76,7 +77,7 @@ export const documentRoutes: FastifyPluginAsyncZod<DocumentRoutesOptions> = asyn
         }),
         response: {
           201: documentSchema,
-          400: messageSchema,
+          400: badRequestSchema,
           401: messageSchema,
           403: messageSchema,
           409: messageSchema,

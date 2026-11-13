@@ -1,4 +1,5 @@
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify'
+import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod'
 import { BackupInFutureError } from '../../domain/backup/backup.errors.js'
 import {
   CategoryNotAllowedError,
@@ -55,7 +56,23 @@ function statusFor(error: DomainError): number {
   return DEFAULT_DOMAIN_ERROR_STATUS
 }
 
+export const INVALID_INPUT_MESSAGE = 'Dados inválidos.'
+
+type ValidationIssue = { instancePath: string; message?: string }
+
+function toInvalidField(issue: ValidationIssue, context: string) {
+  const field = issue.instancePath.split('/').filter(Boolean).join('.')
+  return { field: field || context, message: issue.message ?? INVALID_INPUT_MESSAGE }
+}
+
 export function errorHandler(error: FastifyError, _request: FastifyRequest, reply: FastifyReply) {
+  if (hasZodFastifySchemaValidationErrors(error)) {
+    const context = error.validationContext ?? 'body'
+    return reply.code(400).send({
+      message: INVALID_INPUT_MESSAGE,
+      fields: error.validation.map((issue) => toInvalidField(issue, context)),
+    })
+  }
   if (error instanceof DomainError) {
     return reply.code(statusFor(error)).send({ message: error.message })
   }
