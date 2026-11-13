@@ -54,6 +54,7 @@ export async function buildApp({ db, jwtSecret, ...options }: AppOptions) {
     prefix: API_PREFIX,
     createUser: useCases.createUser,
     listUsers: useCases.listUsers,
+    resetUserPassword: useCases.resetUserPassword,
   })
   await app.register(documentRoutes, {
     prefix: API_PREFIX,

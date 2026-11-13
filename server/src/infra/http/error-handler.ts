@@ -18,6 +18,7 @@ import {
   InvalidCredentialsError,
   InvalidEmailError,
   NotAuthenticatedError,
+  UserNotFoundError,
   WeakPasswordError,
 } from '../../domain/identity/identity.errors.js'
 import { DomainError } from '../../shared/errors/domain-error.js'
@@ -40,6 +41,7 @@ const HTTP_STATUS_BY_ERROR = new Map<DomainErrorClass, number>([
   [NotAuthenticatedError, 401],
   [AccessDeniedError, 403],
   [CategoryNotAllowedError, 403],
+  [UserNotFoundError, 404],
   [EmailAlreadyInUseError, 409],
   [ClientCodeAlreadyInUseError, 409],
   [DocumentNameAlreadyInUseError, 409],

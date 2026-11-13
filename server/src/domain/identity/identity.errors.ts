@@ -31,6 +31,12 @@ export class EmailAlreadyInUseError extends DomainError {
   }
 }
 
+export class UserNotFoundError extends DomainError {
+  constructor() {
+    super('Usuário não encontrado')
+  }
+}
+
 export class InvalidEmailError extends DomainError {
   constructor() {
     super('E-mail inválido')

@@ -10,6 +10,7 @@ import { CreateUserUseCase } from '../../application/identity/create-user.use-ca
 import { GetAuthenticatedUserUseCase } from '../../application/identity/get-authenticated-user.use-case.js'
 import { ListUsersUseCase } from '../../application/identity/list-users.use-case.js'
 import { LoginUseCase } from '../../application/identity/login.use-case.js'
+import { ResetUserPasswordUseCase } from '../../application/identity/reset-user-password.use-case.js'
 import { SystemClock } from '../clock/system-clock.js'
 import { BcryptPasswordHasher } from '../crypto/bcrypt-password-hasher.js'
 import { DrizzleActivityLogRepository } from '../database/repositories/drizzle-activity-log.repository.js'
@@ -34,6 +35,7 @@ export function createUseCases(db: Database) {
     login: new LoginUseCase(users, hasher, activityLog, clock),
     createUser: new CreateUserUseCase(users, categories, hasher, activityLog, clock),
     listUsers: new ListUsersUseCase(users),
+    resetUserPassword: new ResetUserPasswordUseCase(users, hasher, activityLog),
     getAuthenticatedUser: new GetAuthenticatedUserUseCase(users),
     createDocument: new CreateDocumentUseCase(documents, clients, categories, activityLog, clock),
     searchDocuments: new SearchDocumentsUseCase(documents),

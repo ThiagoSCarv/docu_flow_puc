@@ -95,6 +95,15 @@ export class User {
   }
 
   registerSuccessfulLogin(): void {
+    this.unlock()
+  }
+
+  resetPassword(passwordHash: string): void {
+    this.props.passwordHash = passwordHash
+    this.unlock()
+  }
+
+  private unlock(): void {
     this.props.failedLoginAttempts = 0
     this.props.lockedUntil = null
   }
