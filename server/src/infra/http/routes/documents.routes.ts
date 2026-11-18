@@ -37,7 +37,7 @@ export const documentRoutes: FastifyPluginAsyncZod<DocumentRoutesOptions> = asyn
     {
       onRequest: [app.authenticate],
       schema: {
-        tags: ['documents'],
+        tags: ['Documentos'],
         summary: 'Pesquisa documentos nas categorias que o usuário pode ver (ADMIN vê todas)',
         security: bearerAuth,
         querystring: paginationQuerySchema.extend({
@@ -64,7 +64,7 @@ export const documentRoutes: FastifyPluginAsyncZod<DocumentRoutesOptions> = asyn
     {
       onRequest: [app.requireRole(UserRole.ADMIN, UserRole.FUNCIONARIO)],
       schema: {
-        tags: ['documents'],
+        tags: ['Documentos'],
         summary:
           'Cadastra um documento com nome padronizado (ADMIN, ou FUNCIONARIO nas categorias permitidas)',
         security: bearerAuth,

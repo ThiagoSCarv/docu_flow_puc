@@ -14,7 +14,7 @@ export const categoryRoutes: FastifyPluginAsyncZod<CategoryRoutesOptions> = asyn
     {
       onRequest: [app.authenticate],
       schema: {
-        tags: ['categories'],
+        tags: ['Categorias'],
         summary: 'Lista as categorias que o usuário pode ver (ADMIN vê todas)',
         security: bearerAuth,
         response: { 200: z.array(categorySchema), 401: messageSchema },

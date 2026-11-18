@@ -57,7 +57,7 @@ npm run dev:web      # front em https://localhost:5173
 
 O navegador vai avisar que o certificado é autoassinado. Aceite uma vez para `localhost:3333` e uma vez para `localhost:5173`.
 
-Para conferir: abra https://localhost:5173. A tela deve mostrar `API: ok`.
+Para conferir: abra https://localhost:5173. A tela de login deve abrir. Após entrar, acesse **Documentos** para consultar os registros da API.
 
 ### Demonstração (front e API na mesma origem)
 

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useDeferredValue, useState } from 'react'
 import {
+  ApiError,
   api,
   type Document,
   type Page,
@@ -10,6 +11,7 @@ import {
   useCurrentUser,
 } from '../../api'
 import { Pagination, QueryStatus, RecordForm } from '../../components'
+import { formatPeriod, PeriodField, parsePeriod } from './PeriodField'
 import './Documents.css'
 
 function Documents() {
@@ -20,13 +22,14 @@ function Documents() {
   const [search, setSearch] = useState('')
   const [client, setClient] = useState('')
   const [category, setCategory] = useState('')
-  const [period, setPeriod] = useState('')
+  const [periodInput, setPeriodInput] = useState('')
 
   const term = useDeferredValue(search.trim())
   const params = new URLSearchParams({ limit: String(pageSize), offset: String(offset) })
   if (term) params.set('search', term)
   if (client) params.set('clientId', client)
   if (category) params.set('categoryId', category)
+  const period = parsePeriod(periodInput)
   if (period) params.set('period', period)
 
   const documents = useQuery({
@@ -60,13 +63,17 @@ function Documents() {
             title="Cadastrar documento"
             path="/documents"
             resource="documents"
-            fields={(data) => ({
-              clientId: data.get('clientId'),
-              categoryId: data.get('categoryId'),
-              period: data.get('period'),
-              description: data.get('description'),
-              cloudLocation: data.get('cloudLocation'),
-            })}
+            fields={(data) => {
+              const period = parsePeriod(String(data.get('period')))
+              if (!period) throw new ApiError('Informe um período válido no formato AAAA-MM.', 400)
+              return {
+                clientId: data.get('clientId'),
+                categoryId: data.get('categoryId'),
+                period,
+                description: data.get('description'),
+                cloudLocation: data.get('cloudLocation'),
+              }
+            }}
           >
             <label>
               Cliente
@@ -96,9 +103,9 @@ function Documents() {
                 ))}
               </select>
             </label>
-            <label>
+            <label htmlFor="document-create-period">
               Período
-              <input name="period" type="month" required />
+              <PeriodField id="document-create-period" required />
             </label>
             <label>
               Descrição
@@ -167,12 +174,11 @@ function Documents() {
 
         <div className="documents-filter">
           <label htmlFor="document-period">Período</label>
-          <input
+          <PeriodField
             id="document-period"
-            type="month"
-            value={period}
-            onChange={(event) => {
-              setPeriod(event.target.value)
+            value={periodInput}
+            onChange={(value) => {
+              setPeriodInput(value)
               setOffset(0)
             }}
           />
@@ -185,7 +191,7 @@ function Documents() {
             setSearch('')
             setClient('')
             setCategory('')
-            setPeriod('')
+            setPeriodInput('')
             setOffset(0)
           }}
         >
@@ -222,7 +228,7 @@ function Documents() {
                     </td>
                     <td>{clientNames.get(document.clientId) ?? '—'}</td>
                     <td>{categoryNames.get(document.categoryId) ?? '—'}</td>
-                    <td>{document.period}</td>
+                    <td>{formatPeriod(document.period)}</td>
                   </tr>
                 ))}
 

@@ -54,7 +54,7 @@ export function RecordForm({
 }) {
   const queryClient = useQueryClient()
   const mutation = useMutation({
-    mutationFn: (body: unknown) => api(path, { method, body }),
+    mutationFn: (data: FormData) => api(path, { method, body: fields(data) }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: [resource] }),
   })
 
@@ -66,7 +66,7 @@ export function RecordForm({
           event.preventDefault()
           if (mutation.isPending) return
           const form = event.currentTarget
-          mutation.mutate(fields(new FormData(form)), { onSuccess: () => form.reset() })
+          mutation.mutate(new FormData(form), { onSuccess: () => form.reset() })
         }}
       >
         <fieldset disabled={mutation.isPending}>

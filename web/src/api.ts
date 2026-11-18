@@ -2,6 +2,12 @@
 import { useSyncExternalStore } from 'react'
 
 export type Role = 'ADMIN' | 'FUNCIONARIO' | 'CONSULTA'
+export const roleLabels: Record<Role, string> = {
+  ADMIN: 'Administrador',
+  FUNCIONARIO: 'Funcionário',
+  CONSULTA: 'Consulta',
+}
+
 export type User = {
   id: string
   name: string

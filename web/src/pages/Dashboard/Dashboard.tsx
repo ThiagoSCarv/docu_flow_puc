@@ -6,8 +6,8 @@ function Dashboard() {
     <>
       <div className="page-heading">
         <div>
-          <span className="breadcrumb">Página inicial / Dashboard</span>
-          <h1>Dashboard</h1>
+          <span className="breadcrumb">Página inicial</span>
+          <h1>Início</h1>
           <p>Bem-vindo ao OrganizaDoc.</p>
         </div>
       </div>
