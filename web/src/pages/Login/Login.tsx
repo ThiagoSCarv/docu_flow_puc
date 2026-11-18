@@ -1,19 +1,32 @@
+﻿import { useMutation } from '@tanstack/react-query'
 import { FolderOpen } from 'lucide-react'
 import type { FormEvent } from 'react'
 import { useState } from 'react'
+import { Navigate, useLocation } from 'react-router-dom'
+import { api, errorMessage, setToken, useToken } from '../../api'
 import './Login.css'
 
 function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [message, setMessage] = useState('')
+  const token = useToken()
+  const location = useLocation()
+  const login = useMutation({
+    mutationFn: () =>
+      api<{ token: string }>('/auth/login', {
+        method: 'POST',
+        body: { email, password },
+        public: true,
+      }),
+    onSuccess: ({ token }) => setToken(token),
+  })
+
+  if (token) return <Navigate to={location.state?.from ?? '/'} replace />
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-
-    setMessage('Formulário validado. A conexão com o servidor será implementada na próxima etapa.')
+    if (!login.isPending) login.mutate()
   }
-
   return (
     <main className="login-page">
       <section className="login-card" aria-labelledby="login-title">
@@ -41,8 +54,9 @@ function Login() {
               value={email}
               onChange={(event) => {
                 setEmail(event.target.value)
-                setMessage('')
+                login.reset()
               }}
+              disabled={login.isPending}
               required
             />
           </div>
@@ -58,19 +72,20 @@ function Login() {
               value={password}
               onChange={(event) => {
                 setPassword(event.target.value)
-                setMessage('')
+                login.reset()
               }}
+              disabled={login.isPending}
               required
             />
           </div>
 
-          <button type="submit" className="login-submit">
-            Entrar
+          <button type="submit" className="login-submit" disabled={login.isPending}>
+            {login.isPending ? 'Entrando…' : 'Entrar'}
           </button>
 
-          {message && (
-            <p className="login-message" role="status">
-              {message}
+          {login.isError && (
+            <p className="login-message" role="alert">
+              {errorMessage(login.error)}
             </p>
           )}
         </form>
