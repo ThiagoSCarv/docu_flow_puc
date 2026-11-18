@@ -179,12 +179,13 @@ O VS Code recomenda as extensões Biome e EditorConfig ao abrir o projeto e form
 | RNF04, RNF13, RNF14, RNF15   | bcrypt, bloqueio após 5 falhas, JWT de 1 hora, senha forte                      |
 | RNF05, RNF06, RNF07, RNF10   | Permissões no servidor, HTTPS, validação com Zod, respostas sem dados sensíveis |
 
-### Falta
+### Frontend
 
-- **Servidor:** recusar documento com nome padronizado repetido; rota para o ADMIN redefinir a senha de um usuário.
-- **Front:** telas de login, documentos, clientes, backups e orientações (hoje o `web/` só confere a conexão com a API).
-- **Produção:** o Fastify servir o build do React na mesma origem (`@fastify/static`).
-- **Opcional:** SSL entre servidor e PostgreSQL; script de `pg_dump`; requisitos desejáveis (RF04, RF07, RF10, RF20, RF25, RF27, RF29).
+As telas de login, documentos, clientes, usuários, backups e orientações de segurança usam a API. O menu e os formulários seguem o perfil da conta. O Fastify serve o build do React e a API na mesma origem em modo de demonstração.
+
+### Opcional
+
+- Script de `pg_dump` e requisitos desejáveis (RF04, RF07, RF10, RF20, RF25, RF27, RF29).
 
 ## Segurança
 

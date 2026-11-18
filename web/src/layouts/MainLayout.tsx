@@ -1,17 +1,15 @@
-import {
-  Activity,
-  Bell,
+﻿import {
   Database,
   FileText,
   FolderOpen,
   LayoutDashboard,
-  Search,
   ShieldCheck,
   UserCog,
   Users,
 } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 
+import { setToken, useCurrentUser } from '../api'
 import './MainLayout.css'
 
 const menuItems = [
@@ -20,11 +18,18 @@ const menuItems = [
   { label: 'Clientes', icon: Users, path: '/clientes' },
   { label: 'Usuários', icon: UserCog, path: '/usuarios' },
   { label: 'Backups', icon: Database, path: '/backups' },
-  { label: 'Atividades', icon: Activity, path: '/atividades' },
   { label: 'Segurança', icon: ShieldCheck, path: '/seguranca' },
 ]
 
 function MainLayout() {
+  const { data: user } = useCurrentUser()
+  const initials = user?.name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join('')
+    .toUpperCase()
   return (
     <div className="app-container">
       <aside className="sidebar">
@@ -42,29 +47,31 @@ function MainLayout() {
         <div className="menu-label">MENU PRINCIPAL</div>
 
         <nav className="sidebar-menu">
-          {menuItems.map((item) => {
-            const Icon = item.icon
+          {menuItems
+            .filter((item) => item.path !== '/usuarios' || user?.role === 'ADMIN')
+            .map((item) => {
+              const Icon = item.icon
 
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                end={item.path === '/'}
-                className={({ isActive }) => `menu-item ${isActive ? 'active' : ''}`}
-              >
-                <Icon size={19} />
-                <span>{item.label}</span>
-              </NavLink>
-            )
-          })}
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  end={item.path === '/'}
+                  className={({ isActive }) => `menu-item ${isActive ? 'active' : ''}`}
+                >
+                  <Icon size={19} />
+                  <span>{item.label}</span>
+                </NavLink>
+              )
+            })}
         </nav>
 
         <div className="sidebar-bottom">
           <div className="sidebar-user">
-            <div className="user-avatar">AD</div>
+            <div className="user-avatar">{initials}</div>
             <div>
-              <strong>Administrador</strong>
-              <span>ADMIN</span>
+              <strong>{user?.name}</strong>
+              <span>{user?.role}</span>
             </div>
           </div>
         </div>
@@ -72,19 +79,14 @@ function MainLayout() {
 
       <main className="main-content">
         <header className="topbar">
-          <div className="search-box">
-            <Search size={18} />
-            <input type="text" placeholder="Pesquisar no sistema..." />
-          </div>
-
           <div className="topbar-actions">
-            <button type="button" className="icon-button" aria-label="Notificações">
-              <Bell size={20} />
+            <button type="button" className="icon-button" onClick={() => setToken(null)}>
+              Sair
             </button>
 
             <div className="header-profile">
-              <div className="user-avatar">AD</div>
-              <span>Administrador</span>
+              <div className="user-avatar">{initials}</div>
+              <span>{user?.name}</span>
             </div>
           </div>
         </header>
