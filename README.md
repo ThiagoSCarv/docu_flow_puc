@@ -28,8 +28,8 @@ server/
     └── integration/    # HTTP + PGlite
 web/
 ├── src/
-│   ├── main.tsx        # ponto de entrada (QueryClientProvider)
-│   └── App.tsx         # tela provisória
+│   ├── main.tsx        # ponto de entrada do React
+│   └── App.tsx         # rotas, proteção de sessão e QueryClientProvider
 └── vite.config.ts      # HTTPS + proxy de /api
 ```
 
@@ -57,7 +57,7 @@ npm run dev:web      # front em https://localhost:5173
 
 O navegador vai avisar que o certificado é autoassinado. Aceite uma vez para `localhost:3333` e uma vez para `localhost:5173`.
 
-Para conferir: abra https://localhost:5173. A tela de login deve abrir. Após entrar, acesse **Documentos** para consultar os registros da API.
+Para conferir: abra https://localhost:5173, entre com um usuário cadastrado e acesse **Documentos**. Para verificar a API separadamente, abra https://localhost:3333/api/health.
 
 ### Demonstração (front e API na mesma origem)
 
@@ -115,6 +115,7 @@ Todas sob `/api`. As permissões são verificadas no servidor. Perfis: `ADMIN`, 
 | POST       | `/auth/login`                                  | público, 10 tentativas/min                      | RF02                               |
 | GET        | `/auth/me`                                     | autenticado                                     | RF02                               |
 | GET / POST | `/users`                                       | ADMIN                                           | RF01, RF05                         |
+| PATCH      | `/users/:id/password`                          | ADMIN                                           | Redefinição de senha               |
 | GET        | `/categories`                                  | autenticado, só as categorias permitidas        | RF19                               |
 | GET / POST | `/clients`                                     | autenticado / ADMIN                             | RF06, RF08                         |
 | GET        | `/documents?search&categoryId&clientId&period` | autenticado, só as categorias permitidas        | RF15, RF19                         |
@@ -127,11 +128,11 @@ Regras de negócio que o front precisa conhecer:
 - **Paginação:** `GET /users`, `/clients`, `/documents` e `/backups` respondem `{ "items": [...], "total": N }`, não um array. Use `?limit=50&offset=0`: o `limit` vai de 1 a 100 (padrão 50) e o `offset` começa em 0. Fora disso, a resposta é 400. O `total` conta tudo o que o usuário pode ver com os filtros aplicados, para montar "página X de Y". A ordem é estável, então páginas seguidas não repetem nem pulam itens. `/categories` e `/security-guidelines` continuam devolvendo array.
 - **Categorias:** o ADMIN vê todas; os demais perfis só as que o ADMIN liberou no cadastro do usuário. Sem categorias liberadas, a busca de documentos volta vazia. Filtrar por uma categoria não liberada também devolve lista vazia, sem 403.
 - **Clientes:** o código é convertido para maiúsculas e aceita só letras, números e `-`, com até 20 caracteres. Código repetido retorna 409.
-- **Documentos:** o nome é gerado pelo servidor no padrão `CLIENTE_CATEGORIA_AAAA-MM_descricao` (ex.: `EMPRESA-EXEMPLO_CONT_2026-03_balanco-patrimonial`). O período segue o formato `AAAA-MM`, e o link da nuvem precisa começar com `https://`. Cliente inativo não recebe documentos novos.
+- **Documentos:** o nome é gerado pelo servidor no padrão `CLIENTE_CATEGORIA_AAAA-MM_descricao` (ex.: `EMPRESA-EXEMPLO_CONT_2026-03_balanco-patrimonial`). Nome repetido retorna 409. O período segue o formato `AAAA-MM`, e o link da nuvem precisa começar com `https://`. Cliente inativo não recebe documentos novos.
 - **Backups:** o sistema só registra os backups feitos na nuvem; não faz backup. O responsável é o ADMIN que registra. `performedAt` exige data, hora e fuso (ex.: `2026-11-10T22:00:00-03:00`), e uma data no futuro retorna 400. A situação é `REALIZADO`, `VERIFICADO` ou `FALHOU`. O histórico vem do mais recente para o mais antigo.
 - **Orientações de segurança:** conteúdo fixo, igual para todos os perfis, com 8 orientações (`id`, `title`, `summary`, `practices`) na ordem em que devem ser exibidas.
-- **Erros:** respostas de erro de negócio têm o formato `{ "message": "..." }`, com o texto pronto para mostrar ao usuário.
-- **Log:** login, cadastro de usuário, de cliente, de documento e de backup ficam registrados no log de atividades (RF26).
+- **Erros:** respostas de erro de negócio têm o formato `{ "message": "..." }`, com o texto pronto para mostrar ao usuário. Erros de validação retornam 400 com `message` e uma lista `fields` com o campo e a mensagem de cada erro.
+- **Log:** login, cadastro de usuário, de cliente, de documento e de backup, e redefinição de senha ficam registrados no log de atividades (RF26).
 
 ## HTTPS
 
@@ -179,13 +180,17 @@ O VS Code recomenda as extensões Biome e EditorConfig ao abrir o projeto e form
 | RNF04, RNF13, RNF14, RNF15   | bcrypt, bloqueio após 5 falhas, JWT de 1 hora, senha forte                      |
 | RNF05, RNF06, RNF07, RNF10   | Permissões no servidor, HTTPS, validação com Zod, respostas sem dados sensíveis |
 
-### Frontend
+- **Servidor:** rejeição de nomes de documento repetidos, redefinição de senha pelo ADMIN e conexão TLS com o PostgreSQL quando `DATABASE_SSL=true`.
+- **Demonstração:** o Fastify serve o build do React e a API na mesma origem HTTPS.
 
-As telas de login, documentos, clientes, usuários, backups e orientações de segurança usam a API. O menu e os formulários seguem o perfil da conta. O Fastify serve o build do React e a API na mesma origem em modo de demonstração.
+### Pronto (front)
 
-### Opcional
+- Login pela API, rotas protegidas e ações exibidas de acordo com o perfil.
+- Telas de documentos, clientes, usuários, backups e orientações de segurança integradas à API. O filtro de documentos usa um único campo **Período**, com os meses exibidos conforme o fuso horário do dispositivo.
 
-- Script de `pg_dump` e requisitos desejáveis (RF04, RF07, RF10, RF20, RF25, RF27, RF29).
+### Falta
+
+- **Opcional:** script de `pg_dump` e requisitos desejáveis (RF04, RF07, RF10, RF20, RF25, RF27, RF29).
 
 ## Segurança
 
