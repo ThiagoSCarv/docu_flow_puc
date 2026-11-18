@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
-import { fetchAll, pageSize, useCurrentUser, usePage } from '../../api'
+import { ApiError, fetchAll, pageSize, useCurrentUser, usePage } from '../../api'
 import { Pagination, QueryStatus, RecordForm } from '../../components'
 import './Backups.css'
 
@@ -19,6 +19,17 @@ type Backup = {
   scope: string
   status: BackupStatus
   notes: string | null
+}
+
+function toBackupTimestamp(data: FormData) {
+  const [day, month, year] = String(data.get('backupDate')).split('/')
+  const time = String(data.get('backupTime'))
+  const iso = `${[year, month, day].join('-')}T${time}`
+  const date = new Date(iso)
+  if (!Number.isFinite(date.getTime()) || date.getDate() !== Number(day) || Number(year) === 0) {
+    throw new ApiError('Informe uma data e um horário válidos.', 400)
+  }
+  return date.toISOString()
 }
 
 function Backups() {
@@ -52,15 +63,31 @@ function Backups() {
           path="/backups"
           resource="backups"
           fields={(data) => ({
-            performedAt: new Date(String(data.get('performedAt'))).toISOString(),
+            performedAt: toBackupTimestamp(data),
             status: data.get('status'),
             scope: data.get('scope'),
             notes: data.get('notes') || undefined,
           })}
         >
           <label>
-            Data e hora
-            <input name="performedAt" type="datetime-local" required />
+            Data (DD/MM/AAAA)
+            <input
+              name="backupDate"
+              placeholder="DD/MM/AAAA"
+              pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}"
+              maxLength={10}
+              required
+            />
+          </label>
+          <label>
+            Hora local (HH:MM)
+            <input
+              name="backupTime"
+              placeholder="HH:MM"
+              pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
+              maxLength={5}
+              required
+            />
           </label>
           <label>
             Situação

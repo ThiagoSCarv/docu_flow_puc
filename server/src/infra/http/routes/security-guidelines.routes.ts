@@ -15,7 +15,7 @@ export const securityGuidelineRoutes: FastifyPluginAsyncZod<
     {
       onRequest: [app.authenticate],
       schema: {
-        tags: ['security-guidelines'],
+        tags: ['Segurança'],
         summary: 'Orientações de segurança contra golpes e vazamento de dados',
         security: bearerAuth,
         response: { 200: z.array(securityGuidelineSchema), 401: messageSchema },

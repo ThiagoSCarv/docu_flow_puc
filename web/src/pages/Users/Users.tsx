@@ -1,5 +1,5 @@
 ﻿import { useState } from 'react'
-import { type User, useCategories, usePage } from '../../api'
+import { roleLabels, type User, useCategories, usePage } from '../../api'
 import { Pagination, QueryStatus, RecordForm } from '../../components'
 import '../Clients/Clients.css'
 
@@ -49,9 +49,11 @@ function Users() {
           <label>
             Perfil
             <select name="role">
-              <option value="CONSULTA">Consulta</option>
-              <option value="FUNCIONARIO">Funcionário</option>
-              <option value="ADMIN">Administrador</option>
+              {(['CONSULTA', 'FUNCIONARIO', 'ADMIN'] as const).map((role) => (
+                <option key={role} value={role}>
+                  {roleLabels[role]}
+                </option>
+              ))}
             </select>
           </label>
           <label>
@@ -87,7 +89,7 @@ function Users() {
                   <tr key={user.id}>
                     <td>{user.name}</td>
                     <td>{user.email}</td>
-                    <td>{user.role}</td>
+                    <td>{roleLabels[user.role]}</td>
                     <td>{user.active ? 'Ativo' : 'Inativo'}</td>
                     <td>
                       <button type="button" onClick={() => setSelectedUserId(user.id)}>

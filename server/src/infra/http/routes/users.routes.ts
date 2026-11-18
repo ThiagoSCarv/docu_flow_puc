@@ -30,7 +30,7 @@ export const userRoutes: FastifyPluginAsyncZod<UserRoutesOptions> = async (
     '/users',
     {
       schema: {
-        tags: ['users'],
+        tags: ['Usuários'],
         summary: 'Lista os usuários em ordem alfabética (somente ADMIN)',
         security: bearerAuth,
         querystring: paginationQuerySchema,
@@ -49,7 +49,7 @@ export const userRoutes: FastifyPluginAsyncZod<UserRoutesOptions> = async (
     '/users',
     {
       schema: {
-        tags: ['users'],
+        tags: ['Usuários'],
         summary: 'Cadastra um usuário com perfil e categorias permitidas (somente ADMIN)',
         security: bearerAuth,
         body: z.object({
@@ -81,7 +81,7 @@ export const userRoutes: FastifyPluginAsyncZod<UserRoutesOptions> = async (
     '/users/:id/password',
     {
       schema: {
-        tags: ['users'],
+        tags: ['Usuários'],
         summary: 'Redefine a senha de um usuário e desbloqueia a conta (somente ADMIN)',
         security: bearerAuth,
         params: z.object({ id: z.uuid() }),

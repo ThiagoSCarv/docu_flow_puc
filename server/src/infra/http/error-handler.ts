@@ -76,5 +76,10 @@ export function errorHandler(error: FastifyError, _request: FastifyRequest, repl
   if (error instanceof DomainError) {
     return reply.code(statusFor(error)).send({ message: error.message })
   }
+  if (error.statusCode === 429) {
+    return reply
+      .code(429)
+      .send({ message: 'Muitas tentativas. Aguarde antes de tentar novamente.' })
+  }
   return reply.send(error)
 }

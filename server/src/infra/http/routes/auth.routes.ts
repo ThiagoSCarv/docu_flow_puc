@@ -13,7 +13,7 @@ export const authRoutes: FastifyPluginAsyncZod<AuthRoutesOptions> = async (app, 
     {
       config: { rateLimit: LOGIN_RATE_LIMIT },
       schema: {
-        tags: ['auth'],
+        tags: ['Autenticação'],
         summary: 'Autentica com e-mail e senha e devolve um JWT válido por 1 hora',
         body: z.object({ email: z.email(), password: z.string().min(1) }),
         response: {
@@ -21,6 +21,7 @@ export const authRoutes: FastifyPluginAsyncZod<AuthRoutesOptions> = async (app, 
           400: badRequestSchema,
           401: messageSchema,
           423: messageSchema,
+          429: messageSchema,
         },
       },
     },
@@ -35,7 +36,7 @@ export const authRoutes: FastifyPluginAsyncZod<AuthRoutesOptions> = async (app, 
     {
       onRequest: [app.authenticate],
       schema: {
-        tags: ['auth'],
+        tags: ['Autenticação'],
         summary: 'Dados do usuário autenticado',
         security: bearerAuth,
         response: { 200: userSchema, 401: messageSchema },

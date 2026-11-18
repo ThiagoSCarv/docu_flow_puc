@@ -9,11 +9,11 @@
 } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 
-import { setToken, useCurrentUser } from '../api'
+import { roleLabels, setToken, useCurrentUser } from '../api'
 import './MainLayout.css'
 
 const menuItems = [
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
+  { label: 'Início', icon: LayoutDashboard, path: '/' },
   { label: 'Documentos', icon: FileText, path: '/documentos' },
   { label: 'Clientes', icon: Users, path: '/clientes' },
   { label: 'Usuários', icon: UserCog, path: '/usuarios' },
@@ -71,7 +71,7 @@ function MainLayout() {
             <div className="user-avatar">{initials}</div>
             <div>
               <strong>{user?.name}</strong>
-              <span>{user?.role}</span>
+              <span>{user && roleLabels[user.role]}</span>
             </div>
           </div>
         </div>

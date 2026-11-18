@@ -27,7 +27,7 @@ export const backupRoutes: FastifyPluginAsyncZod<BackupRoutesOptions> = async (
     {
       onRequest: [app.authenticate],
       schema: {
-        tags: ['backups'],
+        tags: ['Backups'],
         summary: 'Histórico de backups, do mais recente ao mais antigo',
         security: bearerAuth,
         querystring: paginationQuerySchema,
@@ -42,7 +42,7 @@ export const backupRoutes: FastifyPluginAsyncZod<BackupRoutesOptions> = async (
     {
       onRequest: [app.requireRole(UserRole.ADMIN)],
       schema: {
-        tags: ['backups'],
+        tags: ['Backups'],
         summary: 'Registra um backup feito na nuvem; o responsável é quem registra (somente ADMIN)',
         security: bearerAuth,
         body: z.object({

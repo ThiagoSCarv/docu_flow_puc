@@ -23,7 +23,7 @@ export const clientRoutes: FastifyPluginAsyncZod<ClientRoutesOptions> = async (
     {
       onRequest: [app.authenticate],
       schema: {
-        tags: ['clients'],
+        tags: ['Clientes'],
         summary: 'Lista os clientes do escritório, em ordem alfabética',
         security: bearerAuth,
         querystring: paginationQuerySchema,
@@ -38,7 +38,7 @@ export const clientRoutes: FastifyPluginAsyncZod<ClientRoutesOptions> = async (
     {
       onRequest: [app.requireRole(UserRole.ADMIN)],
       schema: {
-        tags: ['clients'],
+        tags: ['Clientes'],
         summary: 'Cadastra um cliente com código único (somente ADMIN)',
         security: bearerAuth,
         body: z.object({
