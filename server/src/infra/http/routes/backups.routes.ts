@@ -1,6 +1,7 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import type { ListBackupsUseCase } from '../../../application/backup/list-backups.use-case.js'
+import type { ListPendingBackupsUseCase } from '../../../application/backup/list-pending-backups.use-case.js'
 import type { RegisterBackupUseCase } from '../../../application/backup/register-backup.use-case.js'
 import { UserRole } from '../../../shared/utils/enums.js'
 import {
@@ -16,11 +17,12 @@ import {
 type BackupRoutesOptions = {
   registerBackup: RegisterBackupUseCase
   listBackups: ListBackupsUseCase
+  listPendingBackups: ListPendingBackupsUseCase
 }
 
 export const backupRoutes: FastifyPluginAsyncZod<BackupRoutesOptions> = async (
   app,
-  { registerBackup, listBackups },
+  { registerBackup, listBackups, listPendingBackups },
 ) => {
   app.get(
     '/backups',
@@ -35,6 +37,21 @@ export const backupRoutes: FastifyPluginAsyncZod<BackupRoutesOptions> = async (
       },
     },
     (request) => listBackups.execute(request.query),
+  )
+
+  app.get(
+    '/backups/pending',
+    {
+      onRequest: [app.authenticate],
+      schema: {
+        tags: ['Backups'],
+        summary: 'Backups REALIZADO ainda sem verificação: feitos depois do último VERIFICADO',
+        security: bearerAuth,
+        querystring: paginationQuerySchema,
+        response: { 200: pageSchema(backupSchema), 400: badRequestSchema, 401: messageSchema },
+      },
+    },
+    (request) => listPendingBackups.execute(request.query),
   )
 
   app.post(

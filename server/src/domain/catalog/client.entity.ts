@@ -57,4 +57,16 @@ export class Client {
   get createdAt() {
     return this.props.createdAt
   }
+
+  rename(name: string): void {
+    this.props.name = name.trim()
+  }
+
+  activate(): void {
+    this.props.active = true
+  }
+
+  deactivate(): void {
+    this.props.active = false
+  }
 }

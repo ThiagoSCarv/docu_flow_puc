@@ -1,7 +1,10 @@
-import { asc, count, eq, inArray } from 'drizzle-orm'
+import { asc, count, eq, inArray, or, type SQL } from 'drizzle-orm'
 import { Email } from '../../../domain/identity/email.value-object.js'
 import { User } from '../../../domain/identity/user.entity.js'
-import type { UserRepository } from '../../../domain/identity/user.repository.js'
+import type {
+  CategoryAccessCriteria,
+  UserRepository,
+} from '../../../domain/identity/user.repository.js'
 import type { Page, PageRequest } from '../../../shared/utils/pagination.js'
 import { userCategoryPermissions, users } from '../schema.js'
 import type { Database } from '../types.js'
@@ -22,14 +25,34 @@ export class DrizzleUserRepository implements UserRepository {
   }
 
   async list(page: PageRequest): Promise<Page<User>> {
+    return this.listWhere(undefined, page)
+  }
+
+  async listWithCategoryAccess(
+    { categoryId, rolesThatViewAll }: CategoryAccessCriteria,
+    page: PageRequest,
+  ): Promise<Page<User>> {
+    const usersPermittedInCategory = this.db
+      .select({ userId: userCategoryPermissions.userId })
+      .from(userCategoryPermissions)
+      .where(eq(userCategoryPermissions.categoryId, categoryId))
+    const where = or(
+      rolesThatViewAll.length > 0 ? inArray(users.role, [...rolesThatViewAll]) : undefined,
+      inArray(users.id, usersPermittedInCategory),
+    )
+    return this.listWhere(where, page)
+  }
+
+  private async listWhere(where: SQL | undefined, page: PageRequest): Promise<Page<User>> {
     const [rows, [{ total }]] = await Promise.all([
       this.db
         .select()
         .from(users)
+        .where(where)
         .orderBy(asc(users.name), asc(users.id))
         .limit(page.limit)
         .offset(page.offset),
-      this.db.select({ total: count() }).from(users),
+      this.db.select({ total: count() }).from(users).where(where),
     ])
     const categoryIdsByUser = await this.loadAllowedCategoryIds(rows.map((row) => row.id))
     const items = rows.map((row) => this.restore(row, categoryIdsByUser.get(row.id) ?? []))

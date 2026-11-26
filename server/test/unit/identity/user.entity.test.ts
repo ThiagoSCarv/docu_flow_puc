@@ -63,4 +63,24 @@ describe('User', () => {
     expect(user.failedLoginAttempts).toBe(0)
     expect(user.isLockedAt(now)).toBe(false)
   })
+
+  it('desativa e reativa sem perder os dados', () => {
+    const user = createUser()
+
+    user.deactivate()
+    expect(user.active).toBe(false)
+    expect(user.allowedCategoryIds).toEqual(['cat-1', 'cat-2'])
+
+    user.activate()
+    expect(user.active).toBe(true)
+  })
+
+  it('troca perfil e categorias permitidas, sem repetir categorias', () => {
+    const user = createUser()
+
+    user.changePermissions(UserRole.CONSULTA, ['cat-3', 'cat-3'])
+
+    expect(user.role).toBe(UserRole.CONSULTA)
+    expect(user.allowedCategoryIds).toEqual(['cat-3'])
+  })
 })

@@ -6,6 +6,18 @@ export class UnknownCategoryError extends DomainError {
   }
 }
 
+export class CategoryNotFoundError extends DomainError {
+  constructor() {
+    super('Categoria não encontrada')
+  }
+}
+
+export class ClientNotFoundError extends DomainError {
+  constructor() {
+    super('Cliente não encontrado')
+  }
+}
+
 export class UnknownClientError extends DomainError {
   constructor() {
     super('Cliente inexistente')

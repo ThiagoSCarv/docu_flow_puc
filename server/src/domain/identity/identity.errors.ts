@@ -37,6 +37,12 @@ export class UserNotFoundError extends DomainError {
   }
 }
 
+export class OwnAccessChangeError extends DomainError {
+  constructor() {
+    super('Você não pode alterar o próprio acesso')
+  }
+}
+
 export class InvalidEmailError extends DomainError {
   constructor() {
     super('E-mail inválido')

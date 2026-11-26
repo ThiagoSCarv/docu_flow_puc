@@ -1,5 +1,4 @@
 import type { ActivityLogRepository } from '../../domain/audit/activity-log.repository.js'
-import { UnknownCategoryError } from '../../domain/catalog/catalog.errors.js'
 import type { CategoryRepository } from '../../domain/catalog/category.repository.js'
 import { Email } from '../../domain/identity/email.value-object.js'
 import { EmailAlreadyInUseError } from '../../domain/identity/identity.errors.js'
@@ -9,6 +8,7 @@ import type { UserRepository } from '../../domain/identity/user.repository.js'
 import { ActivityAction, ActivityEntity, type UserRole } from '../../shared/utils/enums.js'
 import type { Clock } from '../ports/clock.js'
 import type { PasswordHasher } from '../ports/password-hasher.js'
+import { ensureCategoriesExist } from './ensure-categories-exist.js'
 import { toUserDto, type UserDto } from './user.dto.js'
 
 export type CreateUserInput = {
@@ -34,7 +34,7 @@ export class CreateUserUseCase {
     const password = Password.create(input.password)
 
     await this.ensureEmailIsAvailable(email)
-    await this.ensureCategoriesExist(input.categoryIds)
+    await ensureCategoriesExist(this.categories, input.categoryIds)
 
     const user = User.create(
       {
@@ -60,12 +60,5 @@ export class CreateUserUseCase {
 
   private async ensureEmailIsAvailable(email: Email): Promise<void> {
     if (await this.users.findByEmail(email)) throw new EmailAlreadyInUseError()
-  }
-
-  private async ensureCategoriesExist(categoryIds: string[]): Promise<void> {
-    const uniqueIds = [...new Set(categoryIds)]
-    if (uniqueIds.length === 0) return
-    const existingIds = await this.categories.findExistingIds(uniqueIds)
-    if (existingIds.length !== uniqueIds.length) throw new UnknownCategoryError()
   }
 }

@@ -3,7 +3,9 @@ import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod'
 import { BackupInFutureError } from '../../domain/backup/backup.errors.js'
 import {
   CategoryNotAllowedError,
+  CategoryNotFoundError,
   ClientCodeAlreadyInUseError,
+  ClientNotFoundError,
   DocumentNameAlreadyInUseError,
   InactiveClientError,
   InvalidClientCodeError,
@@ -19,6 +21,7 @@ import {
   InvalidCredentialsError,
   InvalidEmailError,
   NotAuthenticatedError,
+  OwnAccessChangeError,
   UserNotFoundError,
   WeakPasswordError,
 } from '../../domain/identity/identity.errors.js'
@@ -38,11 +41,14 @@ const HTTP_STATUS_BY_ERROR = new Map<DomainErrorClass, number>([
   [InvalidDocumentNameError, 400],
   [InvalidClientCodeError, 400],
   [BackupInFutureError, 400],
+  [OwnAccessChangeError, 400],
   [InvalidCredentialsError, 401],
   [NotAuthenticatedError, 401],
   [AccessDeniedError, 403],
   [CategoryNotAllowedError, 403],
   [UserNotFoundError, 404],
+  [CategoryNotFoundError, 404],
+  [ClientNotFoundError, 404],
   [EmailAlreadyInUseError, 409],
   [ClientCodeAlreadyInUseError, 409],
   [DocumentNameAlreadyInUseError, 409],

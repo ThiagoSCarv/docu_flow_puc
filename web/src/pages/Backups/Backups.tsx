@@ -12,6 +12,8 @@ const statusLabels = {
 
 type BackupStatus = keyof typeof statusLabels
 
+const PENDING_FILTER = 'PENDENTE'
+
 type Backup = {
   id: string
   performedAt: string
@@ -36,16 +38,21 @@ function Backups() {
   const { data: user } = useCurrentUser()
   const [offset, setOffset] = useState(0)
   const [status, setStatus] = useState('')
+  const filtersByStatus = Boolean(status) && status !== PENDING_FILTER
   const allBackups = useQuery({
     queryKey: ['backups', 'filter'],
     queryFn: ({ signal }) => fetchAll<Backup>('/backups', signal),
-    enabled: Boolean(status),
+    enabled: filtersByStatus,
   })
-  const page = usePage<Backup>('backups', offset, !status)
-  const query = status ? allBackups : page
+  const page = usePage<Backup>(
+    status === PENDING_FILTER ? 'backups/pending' : 'backups',
+    offset,
+    !filtersByStatus,
+  )
+  const query = filtersByStatus ? allBackups : page
   const matching = allBackups.data?.filter((backup) => backup.status === status)
-  const items = status ? matching?.slice(offset, offset + pageSize) : page.data?.items
-  const total = (status ? matching?.length : page.data?.total) ?? 0
+  const items = filtersByStatus ? matching?.slice(offset, offset + pageSize) : page.data?.items
+  const total = (filtersByStatus ? matching?.length : page.data?.total) ?? 0
 
   return (
     <>
@@ -124,7 +131,11 @@ function Backups() {
           <option value="REALIZADO">Realizado</option>
           <option value="VERIFICADO">Verificado</option>
           <option value="FALHOU">Falhou</option>
+          <option value={PENDING_FILTER}>Pendentes de verificação</option>
         </select>
+        {status === PENDING_FILTER && (
+          <p>Backups realizados depois da última verificação registrada.</p>
+        )}
       </div>
 
       <QueryStatus pending={query.isPending} error={query.error} />

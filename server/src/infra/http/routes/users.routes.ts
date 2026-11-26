@@ -1,5 +1,7 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
+import type { ChangeUserPermissionsUseCase } from '../../../application/identity/change-user-permissions.use-case.js'
+import type { ChangeUserStatusUseCase } from '../../../application/identity/change-user-status.use-case.js'
 import type { CreateUserUseCase } from '../../../application/identity/create-user.use-case.js'
 import type { ListUsersUseCase } from '../../../application/identity/list-users.use-case.js'
 import type { ResetUserPasswordUseCase } from '../../../application/identity/reset-user-password.use-case.js'
@@ -18,11 +20,13 @@ type UserRoutesOptions = {
   createUser: CreateUserUseCase
   listUsers: ListUsersUseCase
   resetUserPassword: ResetUserPasswordUseCase
+  changeUserStatus: ChangeUserStatusUseCase
+  changeUserPermissions: ChangeUserPermissionsUseCase
 }
 
 export const userRoutes: FastifyPluginAsyncZod<UserRoutesOptions> = async (
   app,
-  { createUser, listUsers, resetUserPassword },
+  { createUser, listUsers, resetUserPassword, changeUserStatus, changeUserPermissions },
 ) => {
   app.addHook('onRequest', app.requireRole(UserRole.ADMIN))
 
@@ -75,6 +79,58 @@ export const userRoutes: FastifyPluginAsyncZod<UserRoutesOptions> = async (
       })
       return reply.code(201).send(user)
     },
+  )
+
+  app.patch(
+    '/users/:id/status',
+    {
+      schema: {
+        tags: ['Usuários'],
+        summary: 'Ativa ou inativa um usuário sem apagar o histórico (somente ADMIN)',
+        security: bearerAuth,
+        params: z.object({ id: z.uuid() }),
+        body: z.object({ active: z.boolean() }),
+        response: {
+          200: userSchema,
+          400: badRequestSchema,
+          401: messageSchema,
+          403: messageSchema,
+          404: messageSchema,
+        },
+      },
+    },
+    (request) =>
+      changeUserStatus.execute({
+        userId: request.params.id,
+        active: request.body.active,
+        actor: { userId: request.user.id, ip: request.ip },
+      }),
+  )
+
+  app.patch(
+    '/users/:id/permissions',
+    {
+      schema: {
+        tags: ['Usuários'],
+        summary: 'Altera o perfil e as categorias permitidas de um usuário (somente ADMIN)',
+        security: bearerAuth,
+        params: z.object({ id: z.uuid() }),
+        body: z.object({ role: roleSchema, categoryIds: z.array(z.uuid()) }),
+        response: {
+          200: userSchema,
+          400: badRequestSchema,
+          401: messageSchema,
+          403: messageSchema,
+          404: messageSchema,
+        },
+      },
+    },
+    (request) =>
+      changeUserPermissions.execute({
+        userId: request.params.id,
+        ...request.body,
+        actor: { userId: request.user.id, ip: request.ip },
+      }),
   )
 
   app.patch(

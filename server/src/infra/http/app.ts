@@ -16,10 +16,12 @@ import { createUseCases } from './composition-root.js'
 import { errorHandler } from './error-handler.js'
 import { authPlugin } from './plugins/auth.plugin.js'
 import { webAppPlugin } from './plugins/web-app.plugin.js'
+import { activityLogRoutes } from './routes/activity-logs.routes.js'
 import { authRoutes } from './routes/auth.routes.js'
 import { backupRoutes } from './routes/backups.routes.js'
 import { categoryRoutes } from './routes/categories.routes.js'
 import { clientRoutes } from './routes/clients.routes.js'
+import { dashboardRoutes } from './routes/dashboard.routes.js'
 import { documentRoutes } from './routes/documents.routes.js'
 import { healthRoutes } from './routes/health.routes.js'
 import { securityGuidelineRoutes } from './routes/security-guidelines.routes.js'
@@ -59,6 +61,8 @@ export async function buildApp({ db, jwtSecret, webDistDir, ...options }: AppOpt
     createUser: useCases.createUser,
     listUsers: useCases.listUsers,
     resetUserPassword: useCases.resetUserPassword,
+    changeUserStatus: useCases.changeUserStatus,
+    changeUserPermissions: useCases.changeUserPermissions,
   })
   await app.register(documentRoutes, {
     prefix: API_PREFIX,
@@ -68,22 +72,33 @@ export async function buildApp({ db, jwtSecret, webDistDir, ...options }: AppOpt
   await app.register(categoryRoutes, {
     prefix: API_PREFIX,
     listCategories: useCases.listCategories,
+    listCategoryAccess: useCases.listCategoryAccess,
   })
   await app.register(clientRoutes, {
     prefix: API_PREFIX,
     createClient: useCases.createClient,
     listClients: useCases.listClients,
+    renameClient: useCases.renameClient,
+    changeClientStatus: useCases.changeClientStatus,
   })
   await app.register(backupRoutes, {
     prefix: API_PREFIX,
     registerBackup: useCases.registerBackup,
     listBackups: useCases.listBackups,
+    listPendingBackups: useCases.listPendingBackups,
   })
 
   await app.register(securityGuidelineRoutes, {
     prefix: API_PREFIX,
     listSecurityGuidelines: useCases.listSecurityGuidelines,
   })
+
+  await app.register(activityLogRoutes, {
+    prefix: API_PREFIX,
+    listActivityLogs: useCases.listActivityLogs,
+  })
+
+  await app.register(dashboardRoutes, { prefix: API_PREFIX, getDashboard: useCases.getDashboard })
 
   if (webDistDir) await app.register(webAppPlugin, { root: webDistDir })
 

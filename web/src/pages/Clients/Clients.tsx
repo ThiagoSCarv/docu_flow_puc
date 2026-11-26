@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { type Client, pageSize, useClientOptions, useCurrentUser, usePage } from '../../api'
-import { Pagination, QueryStatus, RecordForm } from '../../components'
+import { ActionButton, Pagination, QueryStatus, RecordForm } from '../../components'
 import './Clients.css'
 
 function Clients() {
@@ -19,6 +19,9 @@ function Clients() {
   )
   const items = term ? matching?.slice(offset, offset + pageSize) : page.data?.items
   const total = (term ? matching?.length : page.data?.total) ?? 0
+  const isAdmin = user?.role === 'ADMIN'
+  const [editingClientId, setEditingClientId] = useState('')
+  const editingClient = items?.find((client) => client.id === editingClientId)
 
   return (
     <>
@@ -26,11 +29,11 @@ function Clients() {
         <div>
           <span className="breadcrumb">Página inicial / Clientes</span>
           <h1>Clientes</h1>
-          <p>Consulte os clientes cadastrados no catálogo.</p>
+          <p>Consulte os clientes cadastrados no catálogo. Inativar mantém os documentos.</p>
         </div>
       </div>
 
-      {user?.role === 'ADMIN' && (
+      {isAdmin && (
         <RecordForm
           title="Cadastrar cliente"
           path="/clients"
@@ -80,6 +83,7 @@ function Clients() {
                   <th scope="col">Nome</th>
                   <th scope="col">Código</th>
                   <th scope="col">Situação</th>
+                  {isAdmin && <th scope="col">Ações</th>}
                 </tr>
               </thead>
 
@@ -99,12 +103,27 @@ function Clients() {
                         {client.active ? 'Ativo' : 'Inativo'}
                       </span>
                     </td>
+                    {isAdmin && (
+                      <td>
+                        <div className="table-actions">
+                          <button type="button" onClick={() => setEditingClientId(client.id)}>
+                            Editar nome
+                          </button>
+                          <ActionButton
+                            label={client.active ? 'Inativar' : 'Reativar'}
+                            path={`/clients/${client.id}/status`}
+                            body={{ active: !client.active }}
+                            resource="clients"
+                          />
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
 
                 {items.length === 0 && (
                   <tr>
-                    <td colSpan={3} className="clients-empty">
+                    <td colSpan={isAdmin ? 4 : 3} className="clients-empty">
                       Nenhum cliente encontrado. Revise a pesquisa.
                     </td>
                   </tr>
@@ -114,6 +133,23 @@ function Clients() {
           </div>
           <Pagination offset={offset} total={total} onChange={setOffset} />
         </>
+      )}
+
+      {editingClient && (
+        <RecordForm
+          key={`${editingClient.id}-${editingClient.name}`}
+          title={`Editar nome de ${editingClient.name} (${editingClient.code})`}
+          path={`/clients/${editingClient.id}`}
+          resource="clients"
+          method="PATCH"
+          fields={(data) => ({ name: data.get('name') })}
+        >
+          <label>
+            Novo nome
+            <input name="name" required maxLength={200} defaultValue={editingClient.name} />
+          </label>
+          <p>O código do cliente não muda, porque faz parte do nome dos documentos.</p>
+        </RecordForm>
       )}
     </>
   )

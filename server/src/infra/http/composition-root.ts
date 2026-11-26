@@ -1,13 +1,21 @@
+import { ListActivityLogsUseCase } from '../../application/audit/list-activity-logs.use-case.js'
 import { ListSecurityGuidelinesUseCase } from '../../application/awareness/list-security-guidelines.use-case.js'
 import { ListBackupsUseCase } from '../../application/backup/list-backups.use-case.js'
+import { ListPendingBackupsUseCase } from '../../application/backup/list-pending-backups.use-case.js'
 import { RegisterBackupUseCase } from '../../application/backup/register-backup.use-case.js'
+import { ChangeClientStatusUseCase } from '../../application/catalog/change-client-status.use-case.js'
 import { CreateClientUseCase } from '../../application/catalog/create-client.use-case.js'
 import { CreateDocumentUseCase } from '../../application/catalog/create-document.use-case.js'
 import { ListCategoriesUseCase } from '../../application/catalog/list-categories.use-case.js'
 import { ListClientsUseCase } from '../../application/catalog/list-clients.use-case.js'
+import { RenameClientUseCase } from '../../application/catalog/rename-client.use-case.js'
 import { SearchDocumentsUseCase } from '../../application/catalog/search-documents.use-case.js'
+import { GetDashboardUseCase } from '../../application/dashboard/get-dashboard.use-case.js'
+import { ChangeUserPermissionsUseCase } from '../../application/identity/change-user-permissions.use-case.js'
+import { ChangeUserStatusUseCase } from '../../application/identity/change-user-status.use-case.js'
 import { CreateUserUseCase } from '../../application/identity/create-user.use-case.js'
 import { GetAuthenticatedUserUseCase } from '../../application/identity/get-authenticated-user.use-case.js'
+import { ListCategoryAccessUseCase } from '../../application/identity/list-category-access.use-case.js'
 import { ListUsersUseCase } from '../../application/identity/list-users.use-case.js'
 import { LoginUseCase } from '../../application/identity/login.use-case.js'
 import { ResetUserPasswordUseCase } from '../../application/identity/reset-user-password.use-case.js'
@@ -36,15 +44,23 @@ export function createUseCases(db: Database) {
     createUser: new CreateUserUseCase(users, categories, hasher, activityLog, clock),
     listUsers: new ListUsersUseCase(users),
     resetUserPassword: new ResetUserPasswordUseCase(users, hasher, activityLog),
+    changeUserStatus: new ChangeUserStatusUseCase(users, activityLog),
+    changeUserPermissions: new ChangeUserPermissionsUseCase(users, categories, activityLog),
+    listCategoryAccess: new ListCategoryAccessUseCase(users, categories),
     getAuthenticatedUser: new GetAuthenticatedUserUseCase(users),
     createDocument: new CreateDocumentUseCase(documents, clients, categories, activityLog, clock),
     searchDocuments: new SearchDocumentsUseCase(documents),
     listCategories: new ListCategoriesUseCase(categories),
     createClient: new CreateClientUseCase(clients, activityLog, clock),
     listClients: new ListClientsUseCase(clients),
+    renameClient: new RenameClientUseCase(clients, activityLog),
+    changeClientStatus: new ChangeClientStatusUseCase(clients, activityLog),
     registerBackup: new RegisterBackupUseCase(backups, activityLog, clock),
     listBackups: new ListBackupsUseCase(backups),
+    listPendingBackups: new ListPendingBackupsUseCase(backups),
     listSecurityGuidelines: new ListSecurityGuidelinesUseCase(),
+    listActivityLogs: new ListActivityLogsUseCase(activityLog),
+    getDashboard: new GetDashboardUseCase(documents, clients, backups),
   }
 }
 

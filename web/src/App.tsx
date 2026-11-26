@@ -3,6 +3,8 @@ import { useState } from 'react'
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { ApiError, errorMessage, useCurrentUser, useToken } from './api'
 import MainLayout from './layouts/MainLayout'
+import Access from './pages/Access/Access'
+import Activities from './pages/Activities/Activities'
 import Backups from './pages/Backups/Backups'
 import Clients from './pages/Clients/Clients'
 import Dashboard from './pages/Dashboard/Dashboard'
@@ -62,6 +64,8 @@ function SessionRoutes({ token }: { token: string | null }) {
             <Route path="clientes" element={<Clients />} />
             <Route element={<AdminRoute />}>
               <Route path="usuarios" element={<Users />} />
+              <Route path="acessos" element={<Access />} />
+              <Route path="atividades" element={<Activities />} />
             </Route>
             <Route path="backups" element={<Backups />} />
             <Route path="seguranca" element={<Security />} />

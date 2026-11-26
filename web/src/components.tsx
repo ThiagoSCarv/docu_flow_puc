@@ -37,6 +37,33 @@ export function Pagination({
   )
 }
 
+export function ActionButton({
+  label,
+  path,
+  body,
+  resource,
+}: {
+  label: string
+  path: string
+  body: unknown
+  resource: string
+}) {
+  const queryClient = useQueryClient()
+  const mutation = useMutation({
+    mutationFn: () => api(path, { method: 'PATCH', body }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [resource] }),
+  })
+
+  return (
+    <span className="action-button">
+      <button type="button" disabled={mutation.isPending} onClick={() => mutation.mutate()}>
+        {mutation.isPending ? 'Salvando…' : label}
+      </button>
+      {mutation.isError && <span role="alert">{errorMessage(mutation.error)}</span>}
+    </span>
+  )
+}
+
 export function RecordForm({
   title,
   path,

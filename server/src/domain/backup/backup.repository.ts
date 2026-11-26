@@ -9,4 +9,5 @@ export type BackupHistoryEntry = {
 export interface BackupRepository {
   save(backup: Backup): Promise<void>
   findHistory(page: PageRequest): Promise<Page<BackupHistoryEntry>>
+  findPendingVerification(page: PageRequest): Promise<Page<BackupHistoryEntry>>
 }

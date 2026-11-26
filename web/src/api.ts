@@ -109,7 +109,7 @@ export const pageSize = 50
 
 export function usePage<T>(resource: string, offset: number, enabled = true) {
   return useQuery({
-    queryKey: [resource, offset],
+    queryKey: [...resource.split('/'), offset],
     queryFn: ({ signal }) =>
       api<Page<T>>(`/${resource}?limit=${pageSize}&offset=${offset}`, { signal }),
     enabled,
