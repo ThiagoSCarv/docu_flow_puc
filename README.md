@@ -1,37 +1,47 @@
 # OrganizaDoc
 
-Catálogo de documentos digitais para um escritório de contabilidade (Projeto Integrador III-A, PUC Goiás). Arquitetura cliente-servidor com comunicação protegida por HTTPS/TLS.
+Catálogo de documentos digitais para um escritório de contabilidade, desenvolvido no Projeto Integrador III-A (Análise e Desenvolvimento de Sistemas, PUC Goiás). Aplicação cliente-servidor com comunicação protegida por HTTPS/TLS.
+
+## Visão geral
+
+O escritório guarda os arquivos na nuvem, mas tinha dificuldade para organizá-los e controlar quem acessa os dados dos clientes. O OrganizaDoc funciona como uma camada de organização sobre essa nuvem: registra os metadados de cada documento (cliente, categoria, período, link e responsável), sem armazenar os arquivos.
+
+Principais funcionalidades:
+
+- **Documentos:** cadastro com nome padronizado (`CLIENTE_CATEGORIA_AAAA-MM_descricao`), link para a nuvem e busca por nome, categoria, cliente e período.
+- **Clientes:** cadastro, consulta, edição e inativação sem perder o histórico.
+- **Usuários e acesso:** cadastro feito pelo administrador, três perfis (ADMIN, FUNCIONARIO e CONSULTA) e visualização restrita às categorias liberadas para cada usuário.
+- **Backups:** registro e histórico dos backups feitos na nuvem, com destaque para os pendentes de verificação. O sistema não faz backup, só acompanha.
+- **Log de atividades:** logins, cadastros e mudanças de permissão ficam registrados para consulta do administrador.
+- **Painel:** indicadores de documentos, clientes e backups na página inicial.
+- **Orientações de segurança:** conteúdo educativo sobre golpes e boas práticas.
+
+Segurança aplicada: HTTPS em todos os ambientes, senhas com hash bcrypt, bloqueio após 5 tentativas de login, token com validade de 1 hora, permissões verificadas no servidor, validação de toda entrada e conexão com o banco por TLS.
+
+Todos os dados são fictícios. Não cadastre documentos, senhas ou dados reais de clientes.
+
+## Tecnologias
+
+| Parte    | Tecnologias                                         |
+| -------- | --------------------------------------------------- |
+| Servidor | Node.js 22, TypeScript, Fastify 5, Drizzle ORM, Zod |
+| Banco    | PostgreSQL 17 (Docker)                              |
+| Front    | React 19, Vite, React Router, TanStack Query        |
+| Testes   | Vitest (banco em memória com PGlite, sem Docker)    |
+| Outros   | Biome (lint e formatação), Swagger em `/docs`       |
 
 ## Estrutura
 
 Monorepo com **npm workspaces**:
 
-| Pasta      | O que é                                        |
-| ---------- | ---------------------------------------------- |
-| `server/`  | API REST (Fastify 5, Drizzle, PostgreSQL, Zod) |
-| `web/`     | Interface (React + Vite, TanStack Query)       |
-| `scripts/` | Utilitários (geração de certificados)          |
-| `certs/`   | Certificados locais (gerados, fora do git)     |
+| Pasta      | O que é                                                      |
+| ---------- | ------------------------------------------------------------ |
+| `server/`  | API REST em camadas (domínio, casos de uso e infraestrutura) |
+| `web/`     | Interface web que consome a API                              |
+| `scripts/` | Utilitários (geração de certificados)                        |
+| `certs/`   | Certificados locais (gerados, fora do git)                   |
 
-O back-end segue DDD e Clean Architecture. As dependências apontam para dentro: `infra` → `application` → `domain` → `shared`.
-
-```
-server/
-├── src/
-│   ├── shared/         # enums (utils/enums.ts) e erro base de domínio
-│   ├── domain/         # entidades, value objects e repositórios por contexto (identity, catalog, backup, audit)
-│   ├── application/    # casos de uso (um por arquivo) e portas (PasswordHasher, Clock)
-│   └── infra/          # Fastify (http/), Drizzle (database/), bcrypt, env
-├── drizzle/            # migrations geradas
-└── test/
-    ├── unit/           # domínio e casos de uso com fakes em memória
-    └── integration/    # HTTP + PGlite
-web/
-├── src/
-│   ├── main.tsx        # ponto de entrada do React
-│   └── App.tsx         # rotas, proteção de sessão e QueryClientProvider
-└── vite.config.ts      # HTTPS + proxy de /api
-```
+O front e a API se comunicam por HTTPS. Todas as rotas da API ficam sob `/api`, e a documentação interativa, gerada automaticamente, fica em `https://localhost:3333/docs`.
 
 ## Pré-requisitos
 
@@ -40,160 +50,71 @@ web/
 
 ## Como rodar
 
+### 1. Preparar o ambiente (uma vez)
+
 ```bash
-npm install          # instala server e web de uma vez
-npm run certs        # gera certs/key.pem e certs/cert.pem (uma vez só)
+npm install                        # instala server e web
+npm run certs                      # gera o certificado HTTPS em certs/
 cp server/.env.example server/.env
 ```
 
-O `server/.env` é obrigatório: o servidor não sobe sem `DATABASE_URL` e `JWT_SECRET` (mínimo 32 caracteres). O `DATABASE_URL` do `.env.example` já bate com o PostgreSQL do Docker; troque `JWT_SECRET` e `SEED_ADMIN_PASSWORD`. Para gerar um segredo: `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`. Ele é lido pelo próprio Node (`process.loadEnvFile`), sem dotenv.
-
-Em dois terminais:
+No `server/.env`, troque `JWT_SECRET` (mínimo 32 caracteres) e `SEED_ADMIN_PASSWORD`. Para gerar um segredo:
 
 ```bash
-npm run dev:server   # API em https://localhost:3333 (docs em /docs)
-npm run dev:web      # front em https://localhost:5173
+node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
 ```
 
-O navegador vai avisar que o certificado é autoassinado. Aceite uma vez para `localhost:3333` e uma vez para `localhost:5173`.
-
-Para conferir: abra https://localhost:5173, entre com um usuário cadastrado e acesse **Documentos**. Para verificar a API separadamente, abra https://localhost:3333/api/health.
-
-### Demonstração (front e API na mesma origem)
+### 2. Subir e preparar o banco
 
 ```bash
-npm run db:up
-npm run demo         # build do web e do server, depois sobe tudo em https://localhost:3333
+npm run db:up                      # sobe o PostgreSQL no Docker (com SSL)
+npm run db:migrate -w server       # cria as tabelas
+npm run db:seed -w server          # categorias iniciais e o usuário administrador
 ```
 
-O Fastify serve o build do React (`web/dist`) e a API com o mesmo certificado, na mesma origem: front em `https://localhost:3333`, API em `/api` e docs em `/docs`. Recarregar a página em qualquer rota do front (ex.: `/documentos`) funciona, porque o servidor devolve o `index.html`. Sem `web/dist`, o servidor sobe só com a API, como no `dev:server`.
-
-### Banco de dados
+Para ter dados fictícios de exemplo (1000 clientes, 3250 documentos, 1000 backups e 500 usuários), rode também:
 
 ```bash
-npm run db:up                      # sobe o PostgreSQL no Docker
-npm run db:migrate -w server       # cria/atualiza as tabelas
-npm run db:seed -w server          # categorias iniciais + admin (SEED_ADMIN_* do .env)
-npm run db:seed:demo -w server     # o mesmo + dados fictícios para testar (SEED_DEMO_PASSWORD do .env)
-npm run db:down                    # derruba
+npm run db:seed:demo -w server
 ```
 
-O `db:seed:demo` deixa o banco pronto para testar e demonstrar com volume de escritório real. Leva cerca de 2 segundos. Os dados passam pelas regras do domínio (nome padronizado, período, código de cliente) e cada criação entra no log de atividades. Rodar de novo não duplica nada, e tudo é fictício:
+### 3. Rodar a aplicação
 
-- **Usuários (500):** todos com a senha `SEED_DEMO_PASSWORD` (`demo12345` no `.env.example`). Para entrar, use `funcionario@exemplo.com` (FUNCIONARIO, categorias Contábeis, Fiscais e Financeiros) ou `consulta@exemplo.com` (CONSULTA, Contábeis e Fiscais). Os demais seguem o padrão `funcionario.0003@exemplo.com` / `consulta.0004@exemplo.com`, com combinações variadas de categorias. O admin continua sendo o do `SEED_ADMIN_*`.
-- **Clientes (1000):** `CLI-0001` a `CLI-1000`, com nomes como "Comércio Exemplo 0001 Ltda".
-- **Documentos (3250):** 3 ou 4 por cliente, espalhados pelas seis categorias e pelos meses de janeiro a outubro de 2026, com links fictícios em `nuvem.exemplo.com`.
-- **Backups (1000):** um por dia, terminando ontem às 22h. A maioria está `VERIFICADO`, 1 a cada 20 aparece como `FALHOU` e os 3 mais recentes como `REALIZADO` (aguardando verificação).
-
-Entrar com cada perfil mostra a restrição por categoria: o FUNCIONARIO não vê Contratos, Administrativos nem Outros, e o CONSULTA vê só Contábeis e Fiscais.
-
-O PostgreSQL do Docker sobe com SSL ligado, usando o mesmo certificado de `certs/` (rode `npm run certs` antes do `db:up`). Com `DATABASE_SSL=true` no `server/.env`, o servidor se conecta ao banco por TLS e confia só no `certs/cert.pem`: um certificado diferente faz a conexão falhar. Para conferir na demonstração, com o servidor rodando e depois de pelo menos uma requisição (ex.: login):
+**Demonstração** (front e API juntos, em uma única origem):
 
 ```bash
-docker compose exec db psql -U organizadoc -c "SELECT a.client_addr, s.ssl, s.version FROM pg_stat_ssl s JOIN pg_stat_activity a USING (pid) WHERE a.client_addr IS NOT NULL;"
+npm run demo                       # abre em https://localhost:3333
 ```
 
-As conexões do servidor aparecem com `ssl = t` e `version = TLSv1.3`.
-
-Ao alterar `server/src/infra/database/schema.ts`, gere a migration com `npm run db:generate -w server -- --name <descricao>` e faça commit da pasta `server/drizzle/` junto.
-
-## Comunicação entre web e server
-
-- **Prefixo `/api`:** todas as rotas da API começam com `/api` (ex.: `/api/health`, `/api/auth/login`). Assim elas não colidem com as rotas do React Router quando o Fastify serve o build do front. Rota inexistente sob `/api` devolve 404 em JSON.
-- **Caminhos relativos:** o front chama sempre `fetch('/api/...')`. Em desenvolvimento, o Vite repassa essas chamadas para `https://localhost:3333` (proxy). Na demonstração (`npm run demo`), front e API ficam na mesma origem. Nos dois casos não há CORS nem URL fixa no código. Para apontar para outra API em dev: `API_URL=https://outro-host npm run dev:web`.
-- **Contrato:** a documentação OpenAPI em **https://localhost:3333/docs** é gerada automaticamente a partir dos schemas Zod das rotas. É a referência do front para formatos de requisição e resposta.
-- **Autenticação:** `POST /api/auth/login` com `{ email, password }` devolve `{ token }`, válido por 1 hora. As demais rotas recebem o header `Authorization: Bearer <token>`. `GET /api/auth/me` devolve o usuário logado (nome, e-mail, perfil). Respostas: 401 para credenciais inválidas ou token ausente/expirado, 403 para perfil sem permissão, 423 para conta bloqueada após 5 tentativas (15 minutos), 429 para mais de 10 tentativas de login por minuto. No `/docs`, use o botão **Authorize** com o token para testar as rotas protegidas.
-- **Health check:** `GET /api/health` retorna `{ "status": "ok" }` e serve para confirmar que o cliente alcança o servidor via HTTPS.
-
-## Rotas da API
-
-Todas sob `/api`. As permissões são verificadas no servidor. Perfis: `ADMIN`, `FUNCIONARIO` e `CONSULTA`.
-
-| Método     | Rota                                           | Acesso                                          | Requisito                          |
-| ---------- | ---------------------------------------------- | ----------------------------------------------- | ---------------------------------- |
-| GET        | `/health`                                      | público                                         | —                                  |
-| POST       | `/auth/login`                                  | público, 10 tentativas/min                      | RF02                               |
-| GET        | `/auth/me`                                     | autenticado                                     | RF02                               |
-| GET / POST | `/users`                                       | ADMIN                                           | RF01, RF05                         |
-| PATCH      | `/users/:id/password`                          | ADMIN                                           | Redefinição de senha               |
-| GET        | `/categories`                                  | autenticado, só as categorias permitidas        | RF19                               |
-| GET / POST | `/clients`                                     | autenticado / ADMIN                             | RF06, RF08                         |
-| GET        | `/documents?search&categoryId&clientId&period` | autenticado, só as categorias permitidas        | RF15, RF19                         |
-| POST       | `/documents`                                   | ADMIN; FUNCIONARIO só nas categorias permitidas | RF09, RF11, RF12, RF14, RF17, RF31 |
-| GET / POST | `/backups`                                     | autenticado / ADMIN                             | RF22, RF23, RF24                   |
-| GET        | `/security-guidelines`                         | autenticado                                     | RF28                               |
-
-Regras de negócio que o front precisa conhecer:
-
-- **Paginação:** `GET /users`, `/clients`, `/documents` e `/backups` respondem `{ "items": [...], "total": N }`, não um array. Use `?limit=50&offset=0`: o `limit` vai de 1 a 100 (padrão 50) e o `offset` começa em 0. Fora disso, a resposta é 400. O `total` conta tudo o que o usuário pode ver com os filtros aplicados, para montar "página X de Y". A ordem é estável, então páginas seguidas não repetem nem pulam itens. `/categories` e `/security-guidelines` continuam devolvendo array.
-- **Categorias:** o ADMIN vê todas; os demais perfis só as que o ADMIN liberou no cadastro do usuário. Sem categorias liberadas, a busca de documentos volta vazia. Filtrar por uma categoria não liberada também devolve lista vazia, sem 403.
-- **Clientes:** o código é convertido para maiúsculas e aceita só letras, números e `-`, com até 20 caracteres. Código repetido retorna 409.
-- **Documentos:** o nome é gerado pelo servidor no padrão `CLIENTE_CATEGORIA_AAAA-MM_descricao` (ex.: `EMPRESA-EXEMPLO_CONT_2026-03_balanco-patrimonial`). Nome repetido retorna 409. O período segue o formato `AAAA-MM`, e o link da nuvem precisa começar com `https://`. Cliente inativo não recebe documentos novos.
-- **Backups:** o sistema só registra os backups feitos na nuvem; não faz backup. O responsável é o ADMIN que registra. `performedAt` exige data, hora e fuso (ex.: `2026-11-10T22:00:00-03:00`), e uma data no futuro retorna 400. A situação é `REALIZADO`, `VERIFICADO` ou `FALHOU`. O histórico vem do mais recente para o mais antigo.
-- **Orientações de segurança:** conteúdo fixo, igual para todos os perfis, com 8 orientações (`id`, `title`, `summary`, `practices`) na ordem em que devem ser exibidas.
-- **Erros:** respostas de erro de negócio têm o formato `{ "message": "..." }`, com o texto pronto para mostrar ao usuário. Erros de validação retornam 400 com `message` e uma lista `fields` com o campo e a mensagem de cada erro.
-- **Log:** login, cadastro de usuário, de cliente, de documento e de backup, e redefinição de senha ficam registrados no log de atividades (RF26).
-
-## HTTPS
-
-- `npm run certs` gera um certificado autoassinado para `localhost`, `127.0.0.1` e `::1`, válido por 1 ano. O script é em Node, então funciona em Windows, Linux e macOS. Use `npm run certs -- --force` para gerar de novo.
-- O servidor e o Vite (`dev` e `preview`) usam o mesmo certificado e não sobem sem ele.
-- O `vite build` não precisa de certificado, por isso o build roda no CI.
-
-## Testes
+**Desenvolvimento** (em dois terminais, com recarga automática):
 
 ```bash
-npm test
+npm run dev:server                 # API em https://localhost:3333
+npm run dev:web                    # front em https://localhost:5173
 ```
 
-Os testes montam a aplicação com `buildApp()` e fazem requisições com `app.inject` do Fastify, sem abrir porta nem precisar de certificado.
+### 4. Entrar no sistema
 
-## Scripts da raiz
+- **Administrador:** e-mail e senha definidos em `SEED_ADMIN_EMAIL` e `SEED_ADMIN_PASSWORD` no `server/.env`.
+- **Com os dados de exemplo:** `funcionario@exemplo.com` (FUNCIONARIO) e `consulta@exemplo.com` (CONSULTA), com a senha `SEED_DEMO_PASSWORD` do `.env`. Entrar com cada perfil mostra a restrição de acesso por categoria.
 
-| Comando             | O que faz                                       |
-| ------------------- | ----------------------------------------------- |
-| `npm run certs`     | Gera os certificados de `certs/`                |
-| `npm run demo`      | Build do web e do server e sobe tudo na 3333    |
-| `npm run check`     | Biome (lint + formatação) em todo o repo        |
-| `npm run check:fix` | Corrige o que o Biome consegue corrigir sozinho |
-| `npm run typecheck` | TypeScript em `server` e `web`                  |
-| `npm test`          | Testes (Vitest)                                 |
+Para derrubar o banco: `npm run db:down`.
 
-Para instalar uma dependência em um pacote específico: `npm install <pacote> -w web` (ou `-w server`).
+## Certificado HTTPS
 
-O VS Code recomenda as extensões Biome e EditorConfig ao abrir o projeto e formata ao salvar. O `.gitattributes` força finais de linha LF, para evitar diffs falsos entre Windows e Linux.
+O `npm run certs` gera um certificado autoassinado para `localhost`, válido por 1 ano. Por isso o navegador mostra "Não seguro": a conexão é criptografada, mas o certificado não foi emitido por uma autoridade que o navegador conhece. Para o aviso sumir, importe o `certs/cert.pem` como confiável e reabra o navegador:
 
-## Situação do projeto
+- **Linux (Chrome/Chromium):** com o navegador fechado, rode `certutil -d sql:$HOME/.pki/nssdb -A -t "P,," -n organizadoc-localhost -i certs/cert.pem` (pacote `nss-tools` ou `libnss3-tools`).
+- **Windows:** dê dois cliques no `certs/cert.pem` → Instalar certificado → Usuário atual → "Autoridades de Certificação Raiz Confiáveis".
 
-### Pronto (servidor)
+Se o certificado for gerado de novo (`npm run certs -- --force`), repita a importação.
 
-| Requisito                    | Entrega                                                                         |
-| ---------------------------- | ------------------------------------------------------------------------------- |
-| RF01, RF02, RF05             | Cadastro de usuários pelo ADMIN, login por e-mail e senha, três perfis          |
-| RF06, RF08                   | Cadastro e consulta de clientes fictícios                                       |
-| RF09, RF11, RF12, RF14, RF17 | Cadastro de documento com cliente, categoria, período e link da nuvem           |
-| RF15, RF19                   | Busca por nome, categoria, cliente e período, restrita às categorias            |
-| RF22, RF23, RF24             | Registro e histórico de backups                                                 |
-| RF26                         | Log de login e de cadastros                                                     |
-| RF28                         | Orientações educativas de segurança                                             |
-| RF31                         | Nome padronizado `CLIENTE_CATEGORIA_AAAA-MM_descricao`                          |
-| RNF04, RNF13, RNF14, RNF15   | bcrypt, bloqueio após 5 falhas, JWT de 1 hora, senha forte                      |
-| RNF05, RNF06, RNF07, RNF10   | Permissões no servidor, HTTPS, validação com Zod, respostas sem dados sensíveis |
+## Testes e qualidade
 
-- **Servidor:** rejeição de nomes de documento repetidos, redefinição de senha pelo ADMIN e conexão TLS com o PostgreSQL quando `DATABASE_SSL=true`.
-- **Demonstração:** o Fastify serve o build do React e a API na mesma origem HTTPS.
+```bash
+npm test                           # testes automatizados (não precisam de Docker)
+npm run check                      # lint e formatação (Biome)
+npm run typecheck                  # checagem de tipos em server e web
+```
 
-### Pronto (front)
-
-- Login pela API, rotas protegidas e ações exibidas de acordo com o perfil.
-- Telas de documentos, clientes, usuários, backups e orientações de segurança integradas à API. O filtro de documentos usa um único campo **Período**, com os meses exibidos conforme o fuso horário do dispositivo.
-
-### Falta
-
-- **Opcional:** script de `pg_dump` e requisitos desejáveis (RF04, RF07, RF10, RF20, RF25, RF27, RF29).
-
-## Segurança
-
-- HTTPS em todos os ambientes, inclusive local (RNF06).
-- `.env` e `certs/` nunca vão para o git.
-- Todos os dados são fictícios. Não cadastre documentos, senhas ou dados reais de clientes.
+O CI roda essas verificações e o build do front em todo pull request.
