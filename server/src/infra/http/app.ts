@@ -83,6 +83,7 @@ export async function buildApp({ db, jwtSecret, webDistDir, ...options }: AppOpt
     prefix: API_PREFIX,
     registerBackup: useCases.registerBackup,
     listBackups: useCases.listBackups,
+    listPendingBackups: useCases.listPendingBackups,
   })
 
   await app.register(securityGuidelineRoutes, {

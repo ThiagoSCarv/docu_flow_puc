@@ -1,5 +1,6 @@
 import { ListSecurityGuidelinesUseCase } from '../../application/awareness/list-security-guidelines.use-case.js'
 import { ListBackupsUseCase } from '../../application/backup/list-backups.use-case.js'
+import { ListPendingBackupsUseCase } from '../../application/backup/list-pending-backups.use-case.js'
 import { RegisterBackupUseCase } from '../../application/backup/register-backup.use-case.js'
 import { ChangeClientStatusUseCase } from '../../application/catalog/change-client-status.use-case.js'
 import { CreateClientUseCase } from '../../application/catalog/create-client.use-case.js'
@@ -54,6 +55,7 @@ export function createUseCases(db: Database) {
     changeClientStatus: new ChangeClientStatusUseCase(clients, activityLog),
     registerBackup: new RegisterBackupUseCase(backups, activityLog, clock),
     listBackups: new ListBackupsUseCase(backups),
+    listPendingBackups: new ListPendingBackupsUseCase(backups),
     listSecurityGuidelines: new ListSecurityGuidelinesUseCase(),
   }
 }

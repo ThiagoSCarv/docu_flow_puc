@@ -22,6 +22,7 @@ import type {
   CategoryAccessCriteria,
   UserRepository,
 } from '../../src/domain/identity/user.repository.js'
+import { BackupStatus } from '../../src/shared/utils/enums.js'
 import type { Page, PageRequest } from '../../src/shared/utils/pagination.js'
 
 export const ALL_ITEMS: PageRequest = { limit: 1000, offset: 0 }
@@ -135,13 +136,28 @@ export class InMemoryBackupRepository implements BackupRepository {
   }
 
   async findHistory(page: PageRequest) {
-    const history = [...this.items]
+    return paginate(this.toHistory(this.items), page)
+  }
+
+  async findPendingVerification(page: PageRequest) {
+    const verifiedTimes = this.items
+      .filter((backup) => backup.status === BackupStatus.VERIFICADO)
+      .map((backup) => backup.performedAt.getTime())
+    const lastVerifiedAt = Math.max(Number.NEGATIVE_INFINITY, ...verifiedTimes)
+    const pending = this.items.filter(
+      (backup) =>
+        backup.status === BackupStatus.REALIZADO && backup.performedAt.getTime() > lastVerifiedAt,
+    )
+    return paginate(this.toHistory(pending), page)
+  }
+
+  private toHistory(items: Backup[]) {
+    return [...items]
       .sort((a, b) => b.performedAt.getTime() - a.performedAt.getTime())
       .map((backup) => ({
         backup,
         responsibleName: this.responsibleNames.get(backup.responsibleId) ?? '',
       }))
-    return paginate(history, page)
   }
 }
 
