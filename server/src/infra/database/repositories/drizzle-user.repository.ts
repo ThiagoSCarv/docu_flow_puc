@@ -1,3 +1,4 @@
+// Infra: repositório Drizzle dos usuários e de suas categorias permitidas (RF01, RF05, RF19).
 import { asc, count, eq, inArray, or, type SQL } from 'drizzle-orm'
 import { Email } from '../../../domain/identity/email.value-object.js'
 import { User } from '../../../domain/identity/user.entity.js'
@@ -14,20 +15,24 @@ type UserRow = typeof users.$inferSelect
 export class DrizzleUserRepository implements UserRepository {
   constructor(private readonly db: Database) {}
 
+  // Um usuário pelo id, já com as categorias permitidas.
   async findById(id: string): Promise<User | null> {
     const [row] = await this.db.select().from(users).where(eq(users.id, id))
     return row ? this.toEntity(row) : null
   }
 
+  // Usado no login (RF02); o e-mail chega normalizado pelo value object.
   async findByEmail(email: Email): Promise<User | null> {
     const [row] = await this.db.select().from(users).where(eq(users.email, email.value))
     return row ? this.toEntity(row) : null
   }
 
+  // Página com todos os usuários.
   async list(page: PageRequest): Promise<Page<User>> {
     return this.listWhere(undefined, page)
   }
 
+  // Quem acessa a categoria: perfis que veem tudo ou usuários com permissão explícita (RF20).
   async listWithCategoryAccess(
     { categoryId, rolesThatViewAll }: CategoryAccessCriteria,
     page: PageRequest,
@@ -43,6 +48,7 @@ export class DrizzleUserRepository implements UserRepository {
     return this.listWhere(where, page)
   }
 
+  // Consulta paginada comum; carrega as permissões de todos os usuários da página numa query só.
   private async listWhere(where: SQL | undefined, page: PageRequest): Promise<Page<User>> {
     const [rows, [{ total }]] = await Promise.all([
       this.db
@@ -59,6 +65,7 @@ export class DrizzleUserRepository implements UserRepository {
     return { items, total }
   }
 
+  // Upsert do usuário e regravação das categorias permitidas na mesma transação.
   async save(user: User): Promise<void> {
     const row = {
       id: user.id,
@@ -82,15 +89,18 @@ export class DrizzleUserRepository implements UserRepository {
     })
   }
 
+  // Converte uma linha em entidade buscando as permissões desse usuário.
   private async toEntity(row: UserRow): Promise<User> {
     const categoryIdsByUser = await this.loadAllowedCategoryIds([row.id])
     return this.restore(row, categoryIdsByUser.get(row.id) ?? [])
   }
 
+  // Monta a entidade a partir da linha e das categorias já carregadas.
   private restore(row: UserRow, allowedCategoryIds: string[]): User {
     return User.restore({ ...row, email: Email.create(row.email), allowedCategoryIds })
   }
 
+  // Agrupa as categorias permitidas por usuário, evitando uma query por usuário (N+1).
   private async loadAllowedCategoryIds(userIds: string[]): Promise<Map<string, string[]>> {
     const categoryIdsByUser = new Map<string, string[]>()
     if (userIds.length === 0) return categoryIdsByUser

@@ -1,3 +1,6 @@
+// Domínio (awareness): conteúdo fixo das orientações educativas de segurança (RF28).
+
+// Uma orientação: tema, resumo do risco e práticas recomendadas.
 export type SecurityGuideline = {
   readonly id: string
   readonly title: string
@@ -5,10 +8,12 @@ export type SecurityGuideline = {
   readonly practices: readonly string[]
 }
 
+// Congela a orientação e sua lista de práticas para que ninguém altere o texto em tempo de execução.
 function guideline(content: SecurityGuideline): SecurityGuideline {
   return Object.freeze({ ...content, practices: Object.freeze([...content.practices]) })
 }
 
+// As 8 orientações aprovadas pela dupla, servidas sem banco pela rota de segurança.
 export const SECURITY_GUIDELINES: readonly SecurityGuideline[] = Object.freeze([
   guideline({
     id: 'golpes-por-mensagem',

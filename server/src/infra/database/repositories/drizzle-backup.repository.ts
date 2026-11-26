@@ -1,3 +1,4 @@
+// Infra: repositório Drizzle dos registros de backup e do histórico com o responsável (RF22–RF25).
 import { and, count, desc, eq, gt, max, type SQL } from 'drizzle-orm'
 import { Backup } from '../../../domain/backup/backup.entity.js'
 import type {
@@ -12,6 +13,7 @@ import type { Database } from '../types.js'
 export class DrizzleBackupRepository implements BackupRepository {
   constructor(private readonly db: Database) {}
 
+  // Converte a entidade em linha e insere o registro de backup.
   async save(backup: Backup): Promise<void> {
     await this.db.insert(backups).values({
       id: backup.id,
@@ -23,10 +25,12 @@ export class DrizzleBackupRepository implements BackupRepository {
     })
   }
 
+  // Histórico completo, sem filtro (RF24).
   async findHistory(page: PageRequest): Promise<Page<BackupHistoryEntry>> {
     return this.findWhere(undefined, page)
   }
 
+  // Backups REALIZADO posteriores ao último VERIFICADO, que ainda precisam ser conferidos (RF25).
   async findPendingVerification(page: PageRequest): Promise<Page<BackupHistoryEntry>> {
     const [{ lastVerifiedAt }] = await this.db
       .select({ lastVerifiedAt: max(backups.performedAt) })
@@ -39,6 +43,7 @@ export class DrizzleBackupRepository implements BackupRepository {
     return this.findWhere(where, page)
   }
 
+  // Consulta paginada comum, com o nome do responsável por innerJoin e o total de registros.
   private async findWhere(
     where: SQL | undefined,
     page: PageRequest,

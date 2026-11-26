@@ -1,3 +1,4 @@
+// Infra: schema Drizzle das 7 tabelas, com checks e uniques que são a última barreira das regras.
 import { sql } from 'drizzle-orm'
 import {
   boolean,
@@ -19,11 +20,14 @@ import {
   UserRole,
 } from '../../shared/utils/enums.js'
 
+// Enums do banco derivados dos enums TypeScript, para não haver duas fontes da verdade.
 export const userRole = pgEnum('user_role', UserRole)
 export const backupStatus = pgEnum('backup_status', BackupStatus)
 
+// Coluna de data de criação reaproveitada pelas tabelas, com fuso horário e valor padrão.
 const createdAt = () => timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
 
+// Usuários com perfil, hash da senha e controle de bloqueio por tentativas (RF01, RNF04, RNF13).
 export const users = pgTable(
   'users',
   {
@@ -40,12 +44,14 @@ export const users = pgTable(
   (t) => [check('users_email_lowercase', sql`${t.email} = lower(${t.email})`)],
 )
 
+// Categorias de documento; o código compõe o nome padronizado (RF12, RF31).
 export const categories = pgTable('categories', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull().unique(),
   code: varchar('code', { length: 10 }).notNull().unique(),
 })
 
+// Clientes fictícios; inativar preserva o histórico de documentos (RF06, RF10).
 export const clients = pgTable('clients', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
@@ -54,6 +60,7 @@ export const clients = pgTable('clients', {
   createdAt: createdAt(),
 })
 
+// Catálogo de documentos: só metadados e link da nuvem, nunca o arquivo (RF11, RF17, RF31).
 export const documents = pgTable(
   'documents',
   {
@@ -73,6 +80,7 @@ export const documents = pgTable(
       .references(() => users.id, { onDelete: 'restrict' }),
     createdAt: createdAt(),
   },
+  // Período no formato AAAA-MM garantido pelo banco e índices para os filtros por cliente e categoria.
   (t) => [
     check('documents_period_format', sql`${t.period} ~ '^[0-9]{4}-(0[1-9]|1[0-2])$'`),
     index('documents_client_id_idx').on(t.clientId),
@@ -80,6 +88,7 @@ export const documents = pgTable(
   ],
 )
 
+// Categorias que cada usuário pode ver; chave composta evita permissão duplicada (RF19).
 export const userCategoryPermissions = pgTable(
   'user_category_permissions',
   {
@@ -93,6 +102,7 @@ export const userCategoryPermissions = pgTable(
   (t) => [primaryKey({ columns: [t.userId, t.categoryId] })],
 )
 
+// Registro dos backups feitos na nuvem; o sistema só acompanha, não executa (RF22–RF24).
 export const backups = pgTable('backups', {
   id: uuid('id').primaryKey().defaultRandom(),
   performedAt: timestamp('performed_at', { withTimezone: true }).notNull(),
@@ -104,6 +114,7 @@ export const backups = pgTable('backups', {
     .references(() => users.id, { onDelete: 'restrict' }),
 })
 
+// Log de atividades; mantém o registro mesmo se o usuário for removido (RF26, RNF08).
 export const activityLogs = pgTable(
   'activity_logs',
   {

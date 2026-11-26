@@ -1,3 +1,4 @@
+// Tela de acessos (RF20): lista quem acessa cada categoria de documentos; só ADMIN.
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { api, type Page, pageSize, roleLabels, type User, useCategories } from '../../api'
@@ -8,6 +9,7 @@ function Access() {
   const categories = useCategories()
   const [categoryId, setCategoryId] = useState('')
   const [offset, setOffset] = useState(0)
+  // Só consulta com categoria escolhida; a chave sob 'users' acompanha mudanças de usuário.
   const users = useQuery({
     queryKey: ['users', 'category-access', categoryId, offset],
     queryFn: ({ signal }) =>
@@ -38,6 +40,7 @@ function Access() {
             id="access-category"
             value={categoryId}
             onChange={(event) => {
+              // Nova categoria recomeça a paginação.
               setCategoryId(event.target.value)
               setOffset(0)
             }}

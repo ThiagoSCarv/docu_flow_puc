@@ -1,4 +1,5 @@
-﻿import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+﻿// Raiz do front: cria o cache do TanStack Query e define as rotas protegidas por sessão e perfil.
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { ApiError, errorMessage, useCurrentUser, useToken } from './api'
@@ -13,15 +14,18 @@ import Login from './pages/Login/Login'
 import Security from './pages/Security/Security'
 import Users from './pages/Users/Users'
 
+// Página simples só com título, usada para rota inexistente e acesso negado.
 function PendingPage({ title }: { title: string }) {
   return <h1>{title}</h1>
 }
 
+// Sem token manda ao login guardando a rota de origem para voltar depois de entrar.
 function RequireSession({ token }: { token: string | null }) {
   const location = useLocation()
   return token ? <SessionCheck /> : <Navigate to="/login" replace state={{ from: location }} />
 }
 
+// Confirma o token no servidor (GET /auth/me) antes de liberar as telas internas.
 function SessionCheck() {
   const user = useCurrentUser()
   if (user.isPending) return <p role="status">Verificando sessão…</p>
@@ -38,12 +42,14 @@ function SessionCheck() {
   return <Outlet />
 }
 
+// Esconde as rotas de ADMIN dos outros perfis; o servidor recusa de qualquer forma (RNF05).
 function AdminRoute() {
   const user = useCurrentUser()
   return user.data?.role === 'ADMIN' ? <Outlet /> : <PendingPage title="Acesso restrito" />
 }
 
 function SessionRoutes({ token }: { token: string | null }) {
+  // Erros da API (4xx/5xx) não são repetidos; só falha de rede ganha uma nova tentativa.
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -55,6 +61,7 @@ function SessionRoutes({ token }: { token: string | null }) {
 
   return (
     <QueryClientProvider client={queryClient}>
+      {/* Login é público; o resto exige sessão válida e algumas rotas exigem ADMIN. */}
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route element={<RequireSession token={token} />}>
@@ -77,6 +84,7 @@ function SessionRoutes({ token }: { token: string | null }) {
   )
 }
 
+// A key com o token recria o cache a cada login/logout, sem vazar dados de outra sessão.
 function App() {
   const token = useToken()
   return (

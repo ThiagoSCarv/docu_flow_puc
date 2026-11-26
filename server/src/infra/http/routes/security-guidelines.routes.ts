@@ -1,3 +1,4 @@
+// Infra HTTP: rota das orientações educativas de segurança, conteúdo fixo (RF28).
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import type { ListSecurityGuidelinesUseCase } from '../../../application/awareness/list-security-guidelines.use-case.js'
@@ -10,6 +11,7 @@ type SecurityGuidelineRoutesOptions = {
 export const securityGuidelineRoutes: FastifyPluginAsyncZod<
   SecurityGuidelineRoutesOptions
 > = async (app, { listSecurityGuidelines }) => {
+  // GET /api/security-guidelines: qualquer autenticado; copia as práticas porque vêm readonly.
   app.get(
     '/security-guidelines',
     {

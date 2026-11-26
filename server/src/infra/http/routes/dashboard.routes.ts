@@ -1,3 +1,4 @@
+// Infra HTTP: rota do painel de indicadores do escritório (RF29).
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import type { GetDashboardUseCase } from '../../../application/dashboard/get-dashboard.use-case.js'
@@ -5,6 +6,7 @@ import { backupSchema, bearerAuth, messageSchema } from '../schemas.js'
 
 type DashboardRoutesOptions = { getDashboard: GetDashboardUseCase }
 
+// Indicadores: documentos por categoria, clientes por situação e situação dos backups.
 const dashboardSchema = z.object({
   documents: z.object({
     total: z.number().int(),
@@ -21,6 +23,7 @@ export const dashboardRoutes: FastifyPluginAsyncZod<DashboardRoutesOptions> = as
   app,
   { getDashboard },
 ) => {
+  // GET /api/dashboard: qualquer autenticado; documentos contam só as categorias permitidas.
   app.get(
     '/dashboard',
     {

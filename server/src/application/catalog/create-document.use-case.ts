@@ -1,3 +1,4 @@
+// Camada de aplicação: cadastro de documento no catálogo (RF09, RF11, RF12, RF14, RF17).
 import type { ActivityLogRepository } from '../../domain/audit/activity-log.repository.js'
 import {
   CategoryNotAllowedError,
@@ -20,6 +21,7 @@ import { ActivityAction, ActivityEntity } from '../../shared/utils/enums.js'
 import type { Clock } from '../ports/clock.js'
 import { type DocumentDto, toDocumentDto } from './document.dto.js'
 
+// Metadados do documento (não o arquivo) e o ator com perfil e categorias permitidas.
 export type CreateDocumentInput = {
   clientId: string
   categoryId: string
@@ -29,6 +31,7 @@ export type CreateDocumentInput = {
   actor: CatalogActor & { userId: string; ip: string }
 }
 
+// Registra o documento com nome padronizado CLIENTE_CATEGORIA_AAAA-MM_descricao (RF31).
 export class CreateDocumentUseCase {
   constructor(
     private readonly documents: DocumentRepository,
@@ -38,6 +41,7 @@ export class CreateDocumentUseCase {
     private readonly clock: Clock,
   ) {}
 
+  // Checa permissão na categoria no servidor (RF19, RNF05) antes de tocar no banco.
   async execute(input: CreateDocumentInput): Promise<DocumentDto> {
     if (!canRegisterDocumentIn(input.actor, input.categoryId)) throw new CategoryNotAllowedError()
 
@@ -46,6 +50,7 @@ export class CreateDocumentUseCase {
     const category = await this.categories.findById(input.categoryId)
     if (!category) throw new UnknownCategoryError()
 
+    // Monta o nome padronizado a partir dos códigos de cliente e categoria e do período.
     const name = DocumentName.create({
       clientCode: client.code,
       categoryCode: category.code,
@@ -78,10 +83,12 @@ export class CreateDocumentUseCase {
     return toDocumentDto(document)
   }
 
+  // Recusa nome padronizado repetido, que viraria 409 na camada HTTP.
   private async ensureNameIsAvailable(name: DocumentName): Promise<void> {
     if (await this.documents.existsWithName(name)) throw new DocumentNameAlreadyInUseError()
   }
 
+  // Só aceita cliente existente e ativo; inativo não recebe documentos novos (RF10).
   private async findActiveClient(clientId: string) {
     const client = await this.clients.findById(clientId)
     if (!client) throw new UnknownClientError()

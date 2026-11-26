@@ -1,3 +1,4 @@
+// Infra HTTP: rota de consulta do log de atividades (RF26, RF27).
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import type { ListActivityLogsUseCase } from '../../../application/audit/list-activity-logs.use-case.js'
@@ -12,6 +13,7 @@ import {
 
 type ActivityLogRoutesOptions = { listActivityLogs: ListActivityLogsUseCase }
 
+// Entrada do log como sai na API; o autor é null se o usuário não existe mais.
 const activityLogSchema = z.object({
   id: z.uuid(),
   action: z.enum(ActivityAction),
@@ -26,6 +28,7 @@ export const activityLogRoutes: FastifyPluginAsyncZod<ActivityLogRoutesOptions> 
   app,
   { listActivityLogs },
 ) => {
+  // GET /api/activity-logs: só ADMIN; paginado, com filtro por ação e usuário.
   app.get(
     '/activity-logs',
     {

@@ -1,9 +1,11 @@
+// Tela de atividades (RF27): log paginado de ações importantes, com filtro por ação; só ADMIN.
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { api, type Page, pageSize } from '../../api'
 import { Pagination, QueryStatus } from '../../components'
 import '../Clients/Clients.css'
 
+// Códigos de ação gravados pelo servidor (RF26) e o texto mostrado na tabela e no filtro.
 const actionLabels = {
   LOGIN_SUCESSO: 'Login realizado',
   LOGIN_FALHA: 'Login recusado',
@@ -23,6 +25,7 @@ const actionLabels = {
 
 type Action = keyof typeof actionLabels
 
+// Registro do log; user vem nulo quando a ação não tem autor identificado (ex.: login recusado).
 type ActivityLog = {
   id: string
   action: Action
@@ -34,6 +37,7 @@ type ActivityLog = {
 function Activities() {
   const [action, setAction] = useState('')
   const [offset, setOffset] = useState(0)
+  // O filtro por ação vai para a query string; o servidor filtra e pagina.
   const params = new URLSearchParams({ limit: String(pageSize), offset: String(offset) })
   if (action) params.set('action', action)
   const logs = useQuery({
@@ -57,6 +61,7 @@ function Activities() {
           id="activity-action"
           value={action}
           onChange={(event) => {
+            // Trocar o filtro volta para a primeira página.
             setAction(event.target.value)
             setOffset(0)
           }}

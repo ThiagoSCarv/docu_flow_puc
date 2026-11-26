@@ -1,0 +1,63 @@
+.manage-user {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.manage-block {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-card);
+}
+
+.manage-block h3 {
+  margin: 0 0 var(--space-3);
+  font-size: 15px;
+}
+
+.manage-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.category-checklist {
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+}
+
+.category-checklist legend {
+  padding: 0 var(--space-1);
+  font-weight: 600;
+  color: var(--color-fg);
+}
+
+.category-checklist-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-4);
+}
+
+.form .category-checklist-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.category-checklist-option input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-accent);
+}
+
+@media (max-width: 600px) {
+  .category-checklist-options {
+    grid-template-columns: 1fr;
+  }
+}

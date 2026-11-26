@@ -1,10 +1,12 @@
-﻿import {
+﻿// Layout das telas internas: menu lateral por perfil, usuário logado, botão Sair e <Outlet />.
+import {
   Database,
   FileText,
   FolderOpen,
   History,
   KeyRound,
   LayoutDashboard,
+  LogOut,
   ShieldCheck,
   UserCog,
   Users,
@@ -14,6 +16,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { roleLabels, setToken, useCurrentUser } from '../api'
 import './MainLayout.css'
 
+// Itens do menu; adminOnly some para FUNCIONARIO e CONSULTA (RF05).
 const menuItems = [
   { label: 'Início', icon: LayoutDashboard, path: '/', adminOnly: false },
   { label: 'Documentos', icon: FileText, path: '/documentos', adminOnly: false },
@@ -27,6 +30,7 @@ const menuItems = [
 
 function MainLayout() {
   const { data: user } = useCurrentUser()
+  // Iniciais das duas primeiras palavras do nome, mostradas no avatar.
   const initials = user?.name
     .trim()
     .split(/\s+/)
@@ -84,7 +88,9 @@ function MainLayout() {
       <main className="main-content">
         <header className="topbar">
           <div className="topbar-actions">
-            <button type="button" className="icon-button" onClick={() => setToken(null)}>
+            {/* Sair apaga o token; o App recria o cache e volta para o login. */}
+            <button type="button" className="btn-ghost" onClick={() => setToken(null)}>
+              <LogOut size={18} aria-hidden="true" />
               Sair
             </button>
 

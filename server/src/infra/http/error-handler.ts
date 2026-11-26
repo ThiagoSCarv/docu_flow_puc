@@ -1,3 +1,4 @@
+// Infra HTTP: único lugar que traduz erros de domínio e de validação em status e corpo HTTP.
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify'
 import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod'
 import { BackupInFutureError } from '../../domain/backup/backup.errors.js'
@@ -29,8 +30,10 @@ import { DomainError } from '../../shared/errors/domain-error.js'
 
 type DomainErrorClass = abstract new (...args: never[]) => DomainError
 
+// Erro de domínio sem mapeamento explícito é tratado como regra violada.
 const DEFAULT_DOMAIN_ERROR_STATUS = 400
 
+// Status de cada erro de domínio; erro novo é uma linha aqui.
 const HTTP_STATUS_BY_ERROR = new Map<DomainErrorClass, number>([
   [InvalidEmailError, 400],
   [WeakPasswordError, 400],
@@ -55,6 +58,7 @@ const HTTP_STATUS_BY_ERROR = new Map<DomainErrorClass, number>([
   [AccountLockedError, 423],
 ])
 
+// Usa instanceof para que subclasses herdem o status da classe mapeada.
 function statusFor(error: DomainError): number {
   for (const [errorClass, status] of HTTP_STATUS_BY_ERROR) {
     if (error instanceof errorClass) return status
@@ -62,15 +66,18 @@ function statusFor(error: DomainError): number {
   return DEFAULT_DOMAIN_ERROR_STATUS
 }
 
+// Mensagem genérica de entrada inválida; os detalhes vão na lista de campos.
 export const INVALID_INPUT_MESSAGE = 'Dados inválidos.'
 
 type ValidationIssue = { instancePath: string; message?: string }
 
+// Converte o caminho do erro em "a.b.0"; sem caminho, usa o contexto (body, querystring, params).
 function toInvalidField(issue: ValidationIssue, context: string) {
   const field = issue.instancePath.split('/').filter(Boolean).join('.')
   return { field: field || context, message: issue.message ?? INVALID_INPUT_MESSAGE }
 }
 
+// Validação vira 400 com campos, domínio vira o status mapeado e o 429 ganha mensagem em PT-BR.
 export function errorHandler(error: FastifyError, _request: FastifyRequest, reply: FastifyReply) {
   if (hasZodFastifySchemaValidationErrors(error)) {
     const context = error.validationContext ?? 'body'

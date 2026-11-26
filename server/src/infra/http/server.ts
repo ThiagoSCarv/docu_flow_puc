@@ -1,3 +1,4 @@
+// Infra HTTP: ponto de entrada do servidor; sobe a API em HTTPS com o certificado local (RNF06).
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { env } from '../config/env.js'
@@ -7,11 +8,13 @@ import { buildApp } from './app.js'
 const keyPath = join(env.CERTS_DIR, 'key.pem')
 const certPath = join(env.CERTS_DIR, 'cert.pem')
 
+// Sem certificado não há HTTPS; o servidor se recusa a subir em HTTP puro.
 if (!existsSync(keyPath) || !existsSync(certPath)) {
   console.error('Certificados não encontrados. Rode `npm run certs` na raiz do repositório.')
   process.exit(1)
 }
 
+// Monta a app com TLS e, se houver build do front, serve o React na mesma origem.
 const app = await buildApp({
   db,
   jwtSecret: env.JWT_SECRET,
@@ -19,6 +22,7 @@ const app = await buildApp({
   https: { key: readFileSync(keyPath), cert: readFileSync(certPath) },
   webDistDir: existsSync(env.WEB_DIST_DIR) ? env.WEB_DIST_DIR : undefined,
 })
+// Fecha as conexões com o banco quando o servidor for encerrado.
 app.addHook('onClose', () => pool.end())
 
 try {
