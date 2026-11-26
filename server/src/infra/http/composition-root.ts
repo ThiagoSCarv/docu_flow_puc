@@ -6,8 +6,11 @@ import { CreateDocumentUseCase } from '../../application/catalog/create-document
 import { ListCategoriesUseCase } from '../../application/catalog/list-categories.use-case.js'
 import { ListClientsUseCase } from '../../application/catalog/list-clients.use-case.js'
 import { SearchDocumentsUseCase } from '../../application/catalog/search-documents.use-case.js'
+import { ChangeUserPermissionsUseCase } from '../../application/identity/change-user-permissions.use-case.js'
+import { ChangeUserStatusUseCase } from '../../application/identity/change-user-status.use-case.js'
 import { CreateUserUseCase } from '../../application/identity/create-user.use-case.js'
 import { GetAuthenticatedUserUseCase } from '../../application/identity/get-authenticated-user.use-case.js'
+import { ListCategoryAccessUseCase } from '../../application/identity/list-category-access.use-case.js'
 import { ListUsersUseCase } from '../../application/identity/list-users.use-case.js'
 import { LoginUseCase } from '../../application/identity/login.use-case.js'
 import { ResetUserPasswordUseCase } from '../../application/identity/reset-user-password.use-case.js'
@@ -36,6 +39,9 @@ export function createUseCases(db: Database) {
     createUser: new CreateUserUseCase(users, categories, hasher, activityLog, clock),
     listUsers: new ListUsersUseCase(users),
     resetUserPassword: new ResetUserPasswordUseCase(users, hasher, activityLog),
+    changeUserStatus: new ChangeUserStatusUseCase(users, activityLog),
+    changeUserPermissions: new ChangeUserPermissionsUseCase(users, categories, activityLog),
+    listCategoryAccess: new ListCategoryAccessUseCase(users, categories),
     getAuthenticatedUser: new GetAuthenticatedUserUseCase(users),
     createDocument: new CreateDocumentUseCase(documents, clients, categories, activityLog, clock),
     searchDocuments: new SearchDocumentsUseCase(documents),

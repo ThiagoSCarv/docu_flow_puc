@@ -103,6 +103,19 @@ export class User {
     this.unlock()
   }
 
+  activate(): void {
+    this.props.active = true
+  }
+
+  deactivate(): void {
+    this.props.active = false
+  }
+
+  changePermissions(role: UserRole, allowedCategoryIds: string[]): void {
+    this.props.role = role
+    this.props.allowedCategoryIds = [...new Set(allowedCategoryIds)]
+  }
+
   private unlock(): void {
     this.props.failedLoginAttempts = 0
     this.props.lockedUntil = null

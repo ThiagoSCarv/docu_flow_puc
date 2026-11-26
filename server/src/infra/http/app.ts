@@ -59,6 +59,8 @@ export async function buildApp({ db, jwtSecret, webDistDir, ...options }: AppOpt
     createUser: useCases.createUser,
     listUsers: useCases.listUsers,
     resetUserPassword: useCases.resetUserPassword,
+    changeUserStatus: useCases.changeUserStatus,
+    changeUserPermissions: useCases.changeUserPermissions,
   })
   await app.register(documentRoutes, {
     prefix: API_PREFIX,
@@ -68,6 +70,7 @@ export async function buildApp({ db, jwtSecret, webDistDir, ...options }: AppOpt
   await app.register(categoryRoutes, {
     prefix: API_PREFIX,
     listCategories: useCases.listCategories,
+    listCategoryAccess: useCases.listCategoryAccess,
   })
   await app.register(clientRoutes, {
     prefix: API_PREFIX,

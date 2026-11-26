@@ -18,7 +18,10 @@ import type {
 import type { DocumentName } from '../../src/domain/catalog/document-name.value-object.js'
 import type { Email } from '../../src/domain/identity/email.value-object.js'
 import type { User } from '../../src/domain/identity/user.entity.js'
-import type { UserRepository } from '../../src/domain/identity/user.repository.js'
+import type {
+  CategoryAccessCriteria,
+  UserRepository,
+} from '../../src/domain/identity/user.repository.js'
 import type { Page, PageRequest } from '../../src/shared/utils/pagination.js'
 
 export const ALL_ITEMS: PageRequest = { limit: 1000, offset: 0 }
@@ -40,6 +43,17 @@ export class InMemoryUserRepository implements UserRepository {
 
   async list(page: PageRequest) {
     return paginate([...this.items.values()], page)
+  }
+
+  async listWithCategoryAccess(
+    { categoryId, rolesThatViewAll }: CategoryAccessCriteria,
+    page: PageRequest,
+  ) {
+    const withAccess = [...this.items.values()].filter(
+      (user) =>
+        rolesThatViewAll.includes(user.role) || user.allowedCategoryIds.includes(categoryId),
+    )
+    return paginate(withAccess, page)
   }
 
   async save(user: User) {
