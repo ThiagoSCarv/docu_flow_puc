@@ -2,6 +2,8 @@
   Database,
   FileText,
   FolderOpen,
+  History,
+  KeyRound,
   LayoutDashboard,
   ShieldCheck,
   UserCog,
@@ -13,12 +15,14 @@ import { roleLabels, setToken, useCurrentUser } from '../api'
 import './MainLayout.css'
 
 const menuItems = [
-  { label: 'Início', icon: LayoutDashboard, path: '/' },
-  { label: 'Documentos', icon: FileText, path: '/documentos' },
-  { label: 'Clientes', icon: Users, path: '/clientes' },
-  { label: 'Usuários', icon: UserCog, path: '/usuarios' },
-  { label: 'Backups', icon: Database, path: '/backups' },
-  { label: 'Segurança', icon: ShieldCheck, path: '/seguranca' },
+  { label: 'Início', icon: LayoutDashboard, path: '/', adminOnly: false },
+  { label: 'Documentos', icon: FileText, path: '/documentos', adminOnly: false },
+  { label: 'Clientes', icon: Users, path: '/clientes', adminOnly: false },
+  { label: 'Usuários', icon: UserCog, path: '/usuarios', adminOnly: true },
+  { label: 'Acessos', icon: KeyRound, path: '/acessos', adminOnly: true },
+  { label: 'Atividades', icon: History, path: '/atividades', adminOnly: true },
+  { label: 'Backups', icon: Database, path: '/backups', adminOnly: false },
+  { label: 'Segurança', icon: ShieldCheck, path: '/seguranca', adminOnly: false },
 ]
 
 function MainLayout() {
@@ -48,7 +52,7 @@ function MainLayout() {
 
         <nav className="sidebar-menu">
           {menuItems
-            .filter((item) => item.path !== '/usuarios' || user?.role === 'ADMIN')
+            .filter((item) => !item.adminOnly || user?.role === 'ADMIN')
             .map((item) => {
               const Icon = item.icon
 

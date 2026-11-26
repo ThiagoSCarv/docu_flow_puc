@@ -57,6 +57,49 @@ textarea {
   cursor: pointer;
 }
 
+.action-button {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.action-button button {
+  padding: 0.375rem 0.625rem;
+  cursor: pointer;
+}
+
+.action-button [role="alert"] {
+  color: #b42318;
+  font-size: 13px;
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.category-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.category-totals li {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: #ffffff;
+  border: 1px solid #e9edf3;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #263449;
+}
+
 .pagination {
   display: flex;
   align-items: center;

@@ -22,6 +22,7 @@
   font-weight: 600;
 }
 
+.clients-filter select,
 .clients-filter input {
   width: 100%;
   min-height: 44px;

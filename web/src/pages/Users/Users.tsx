@@ -1,9 +1,12 @@
 ﻿import { useState } from 'react'
-import { roleLabels, type User, useCategories, usePage } from '../../api'
-import { Pagination, QueryStatus, RecordForm } from '../../components'
+import { type Role, roleLabels, type User, useCategories, useCurrentUser, usePage } from '../../api'
+import { ActionButton, Pagination, QueryStatus, RecordForm } from '../../components'
 import '../Clients/Clients.css'
 
+const roleOptions: Role[] = ['CONSULTA', 'FUNCIONARIO', 'ADMIN']
+
 function Users() {
+  const { data: currentUser } = useCurrentUser()
   const [offset, setOffset] = useState(0)
   const [selectedUserId, setSelectedUserId] = useState('')
   const categories = useCategories()
@@ -16,7 +19,7 @@ function Users() {
         <div>
           <span className="breadcrumb">Página inicial / Usuários</span>
           <h1>Usuários</h1>
-          <p>Gerencie as contas e as permissões iniciais do escritório.</p>
+          <p>Gerencie as contas, a situação e as permissões dos usuários do escritório.</p>
         </div>
       </div>
 
@@ -49,7 +52,7 @@ function Users() {
           <label>
             Perfil
             <select name="role">
-              {(['CONSULTA', 'FUNCIONARIO', 'ADMIN'] as const).map((role) => (
+              {roleOptions.map((role) => (
                 <option key={role} value={role}>
                   {roleLabels[role]}
                 </option>
@@ -93,7 +96,7 @@ function Users() {
                     <td>{user.active ? 'Ativo' : 'Inativo'}</td>
                     <td>
                       <button type="button" onClick={() => setSelectedUserId(user.id)}>
-                        Selecionar para redefinir senha
+                        Gerenciar
                       </button>
                     </td>
                   </tr>
@@ -117,19 +120,76 @@ function Users() {
         </>
       )}
       {selectedUser && (
-        <RecordForm
-          key={selectedUser.id}
-          title={`Redefinir senha de ${selectedUser.name}`}
-          path={`/users/${selectedUser.id}/password`}
-          resource="users"
-          method="PATCH"
-          fields={(data) => ({ password: data.get('password') })}
-        >
-          <label>
-            Nova senha
-            <input name="password" type="password" autoComplete="new-password" required />
-          </label>
-        </RecordForm>
+        <section className="record-form" aria-label={`Gerenciar ${selectedUser.name}`}>
+          <h2>Gerenciar {selectedUser.name}</h2>
+          {selectedUser.id === currentUser?.id ? (
+            <p>Você não pode alterar o próprio acesso. Peça a outro administrador.</p>
+          ) : (
+            <>
+              <p>
+                Situação: <strong>{selectedUser.active ? 'Ativo' : 'Inativo'}</strong>{' '}
+                <ActionButton
+                  label={selectedUser.active ? 'Inativar usuário' : 'Reativar usuário'}
+                  path={`/users/${selectedUser.id}/status`}
+                  body={{ active: !selectedUser.active }}
+                  resource="users"
+                />
+              </p>
+              {categories.data && (
+                <RecordForm
+                  key={`${selectedUser.id}-${selectedUser.role}-${selectedUser.allowedCategoryIds.join()}`}
+                  title="Alterar perfil e categorias"
+                  path={`/users/${selectedUser.id}/permissions`}
+                  resource="users"
+                  method="PATCH"
+                  fields={(data) => ({
+                    role: data.get('role'),
+                    categoryIds: data.getAll('categoryIds'),
+                  })}
+                >
+                  <label>
+                    Perfil
+                    <select name="role" defaultValue={selectedUser.role}>
+                      {roleOptions.map((role) => (
+                        <option key={role} value={role}>
+                          {roleLabels[role]}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Categorias permitidas
+                    <select
+                      name="categoryIds"
+                      multiple
+                      size={Math.min(7, categories.data.length || 1)}
+                      defaultValue={selectedUser.allowedCategoryIds}
+                    >
+                      {categories.data.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </RecordForm>
+              )}
+            </>
+          )}
+          <RecordForm
+            key={selectedUser.id}
+            title="Redefinir senha"
+            path={`/users/${selectedUser.id}/password`}
+            resource="users"
+            method="PATCH"
+            fields={(data) => ({ password: data.get('password') })}
+          >
+            <label>
+              Nova senha
+              <input name="password" type="password" autoComplete="new-password" required />
+            </label>
+          </RecordForm>
+        </section>
       )}
     </>
   )
