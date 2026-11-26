@@ -1,6 +1,9 @@
 import { asc, count, eq } from 'drizzle-orm'
 import { Client } from '../../../domain/catalog/client.entity.js'
-import type { ClientRepository } from '../../../domain/catalog/client.repository.js'
+import type {
+  ClientRepository,
+  ClientStatusCount,
+} from '../../../domain/catalog/client.repository.js'
 import type { Page, PageRequest } from '../../../shared/utils/pagination.js'
 import { clients } from '../schema.js'
 import type { Database } from '../types.js'
@@ -19,6 +22,15 @@ export class DrizzleClientRepository implements ClientRepository {
       this.db.select({ total: count() }).from(clients),
     ])
     return { items: rows.map((row) => Client.restore(row)), total }
+  }
+
+  async countByStatus(): Promise<ClientStatusCount> {
+    const rows = await this.db
+      .select({ active: clients.active, total: count() })
+      .from(clients)
+      .groupBy(clients.active)
+    const totalWhere = (active: boolean) => rows.find((row) => row.active === active)?.total ?? 0
+    return { active: totalWhere(true), inactive: totalWhere(false) }
   }
 
   async findById(id: string): Promise<Client | null> {

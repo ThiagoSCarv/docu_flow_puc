@@ -9,6 +9,7 @@ import type { Backup } from '../../src/domain/backup/backup.entity.js'
 import type { BackupRepository } from '../../src/domain/backup/backup.repository.js'
 import type { Category } from '../../src/domain/catalog/category.entity.js'
 import type { CategoryRepository } from '../../src/domain/catalog/category.repository.js'
+import type { CategoryScope } from '../../src/domain/catalog/category-access.policy.js'
 import type { Client } from '../../src/domain/catalog/client.entity.js'
 import type { ClientRepository } from '../../src/domain/catalog/client.repository.js'
 import type { Document } from '../../src/domain/catalog/document.entity.js'
@@ -86,6 +87,11 @@ export class InMemoryClientRepository implements ClientRepository {
     return paginate([...this.clients], page)
   }
 
+  async countByStatus() {
+    const active = this.clients.filter((client) => client.active).length
+    return { active, inactive: this.clients.length - active }
+  }
+
   async findById(id: string) {
     return this.clients.find((client) => client.id === id) ?? null
   }
@@ -106,6 +112,15 @@ export class InMemoryDocumentRepository implements DocumentRepository {
 
   async save(document: Document) {
     this.items.set(document.id, document)
+  }
+
+  async countByCategory(categoryIds: CategoryScope) {
+    const totals = new Map<string, number>()
+    for (const { categoryId } of this.items.values()) {
+      if (categoryIds !== 'ALL' && !categoryIds.includes(categoryId)) continue
+      totals.set(categoryId, (totals.get(categoryId) ?? 0) + 1)
+    }
+    return [...totals].map(([categoryId, total]) => ({ categoryId, total }))
   }
 
   async existsWithName(name: DocumentName) {

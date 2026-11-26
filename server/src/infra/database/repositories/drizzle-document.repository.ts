@@ -1,6 +1,8 @@
 import { and, count, desc, eq, ilike, inArray, or, type SQL } from 'drizzle-orm'
+import type { CategoryScope } from '../../../domain/catalog/category-access.policy.js'
 import { Document } from '../../../domain/catalog/document.entity.js'
 import type {
+  CategoryDocumentCount,
   DocumentRepository,
   DocumentSearchCriteria,
 } from '../../../domain/catalog/document.repository.js'
@@ -53,6 +55,17 @@ export class DrizzleDocumentRepository implements DocumentRepository {
       this.db.select({ total: count() }).from(documents).where(where),
     ])
     return { items: rows.map((row) => this.toEntity(row)), total }
+  }
+
+  async countByCategory(categoryIds: CategoryScope): Promise<CategoryDocumentCount[]> {
+    const where =
+      categoryIds === 'ALL' ? undefined : inArray(documents.categoryId, [...categoryIds])
+    return this.db
+      .select({ categoryId: documents.categoryId, total: count() })
+      .from(documents)
+      .where(where)
+      .groupBy(documents.categoryId)
+      .orderBy(documents.categoryId)
   }
 
   private conditionsFor({ text, categoryIds, clientId, period }: DocumentSearchCriteria) {

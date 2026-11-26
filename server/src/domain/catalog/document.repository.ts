@@ -11,8 +11,14 @@ export type DocumentSearchCriteria = {
   period?: Period
 }
 
+export type CategoryDocumentCount = {
+  categoryId: string
+  total: number
+}
+
 export interface DocumentRepository {
   save(document: Document): Promise<void>
   existsWithName(name: DocumentName): Promise<boolean>
   search(criteria: DocumentSearchCriteria, page: PageRequest): Promise<Page<Document>>
+  countByCategory(categoryIds: CategoryScope): Promise<CategoryDocumentCount[]>
 }

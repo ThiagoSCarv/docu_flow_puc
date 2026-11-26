@@ -10,6 +10,7 @@ import { ListCategoriesUseCase } from '../../application/catalog/list-categories
 import { ListClientsUseCase } from '../../application/catalog/list-clients.use-case.js'
 import { RenameClientUseCase } from '../../application/catalog/rename-client.use-case.js'
 import { SearchDocumentsUseCase } from '../../application/catalog/search-documents.use-case.js'
+import { GetDashboardUseCase } from '../../application/dashboard/get-dashboard.use-case.js'
 import { ChangeUserPermissionsUseCase } from '../../application/identity/change-user-permissions.use-case.js'
 import { ChangeUserStatusUseCase } from '../../application/identity/change-user-status.use-case.js'
 import { CreateUserUseCase } from '../../application/identity/create-user.use-case.js'
@@ -59,6 +60,7 @@ export function createUseCases(db: Database) {
     listPendingBackups: new ListPendingBackupsUseCase(backups),
     listSecurityGuidelines: new ListSecurityGuidelinesUseCase(),
     listActivityLogs: new ListActivityLogsUseCase(activityLog),
+    getDashboard: new GetDashboardUseCase(documents, clients, backups),
   }
 }
 

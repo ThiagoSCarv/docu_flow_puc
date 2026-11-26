@@ -21,6 +21,7 @@ import { authRoutes } from './routes/auth.routes.js'
 import { backupRoutes } from './routes/backups.routes.js'
 import { categoryRoutes } from './routes/categories.routes.js'
 import { clientRoutes } from './routes/clients.routes.js'
+import { dashboardRoutes } from './routes/dashboard.routes.js'
 import { documentRoutes } from './routes/documents.routes.js'
 import { healthRoutes } from './routes/health.routes.js'
 import { securityGuidelineRoutes } from './routes/security-guidelines.routes.js'
@@ -96,6 +97,8 @@ export async function buildApp({ db, jwtSecret, webDistDir, ...options }: AppOpt
     prefix: API_PREFIX,
     listActivityLogs: useCases.listActivityLogs,
   })
+
+  await app.register(dashboardRoutes, { prefix: API_PREFIX, getDashboard: useCases.getDashboard })
 
   if (webDistDir) await app.register(webAppPlugin, { root: webDistDir })
 
