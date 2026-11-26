@@ -83,6 +83,41 @@
   font: inherit;
 }
 
+.login-password {
+  position: relative;
+}
+
+.login-password input {
+  padding-right: 48px;
+}
+
+.login-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #5b6b80;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.login-password-toggle:hover {
+  background: #f1f5f9;
+  color: #263449;
+}
+
+.login-password-toggle:focus-visible {
+  outline: 3px solid #2864d9;
+  outline-offset: 0;
+}
+
 .login-submit {
   min-height: 46px;
   padding: 12px;

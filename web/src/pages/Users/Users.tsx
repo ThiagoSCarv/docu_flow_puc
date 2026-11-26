@@ -1,17 +1,100 @@
-﻿import { useState } from 'react'
-import { type Role, roleLabels, type User, useCategories, useCurrentUser, usePage } from '../../api'
-import { ActionButton, Pagination, QueryStatus, RecordForm } from '../../components'
+﻿// Tela de usuários (RF01, RF04, RF05, RF20): ADMIN cadastra e gerencia situação, perfil e senha.
+import { Ban, Plus, RotateCcw, UserCog } from 'lucide-react'
+import { useState } from 'react'
+import {
+  type Category,
+  type Role,
+  roleLabels,
+  type User,
+  useCategories,
+  useCurrentUser,
+  usePage,
+} from '../../api'
+import {
+  ActionButton,
+  IconButton,
+  Modal,
+  Pagination,
+  QueryStatus,
+  RecordForm,
+  StatusBadge,
+} from '../../components'
 import '../Clients/Clients.css'
+import './Users.css'
 
+// Perfis em ordem do menos ao mais privilegiado; o primeiro é o padrão no cadastro.
 const roleOptions: Role[] = ['CONSULTA', 'FUNCIONARIO', 'ADMIN']
+
+// Regra de senha validada pelo servidor (RNF15), repetida aqui como dica.
+const passwordHint = 'Mínimo de 8 caracteres, com letras e números.'
+
+// Select de perfil de acesso, usado no cadastro e na edição de permissões.
+function RoleSelect({ defaultValue }: { defaultValue?: Role }) {
+  return (
+    <label>
+      Perfil
+      <select name="role" defaultValue={defaultValue}>
+        {roleOptions.map((role) => (
+          <option key={role} value={role}>
+            {roleLabels[role]}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+}
+
+// Checkboxes das categorias permitidas (RF19); todas com o mesmo name para virar lista no FormData.
+function CategoryChecklist({
+  categories,
+  checkedIds = [],
+  className,
+}: {
+  categories: Category[]
+  checkedIds?: string[]
+  className?: string
+}) {
+  return (
+    <fieldset className={`category-checklist${className ? ` ${className}` : ''}`}>
+      <legend>Categorias permitidas</legend>
+      <div className="category-checklist-options">
+        {categories.map((category) => (
+          <label key={category.id} className="category-checklist-option">
+            <input
+              type="checkbox"
+              name="categoryIds"
+              value={category.id}
+              defaultChecked={checkedIds.includes(category.id)}
+            />
+            {category.name}
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  )
+}
+
+// Campo de senha nova com a dica da regra; new-password evita o preenchimento automático.
+function PasswordField({ label }: { label: string }) {
+  return (
+    <label>
+      {label}
+      <input name="password" type="password" autoComplete="new-password" required />
+      <span className="field-hint">{passwordHint}</span>
+    </label>
+  )
+}
 
 function Users() {
   const { data: currentUser } = useCurrentUser()
   const [offset, setOffset] = useState(0)
   const [selectedUserId, setSelectedUserId] = useState('')
+  const [creating, setCreating] = useState(false)
   const categories = useCategories()
   const users = usePage<User>('users', offset)
+  // Guarda só o id e busca na página atual, para o modal refletir os dados após cada alteração.
   const selectedUser = users.data?.items.find((user) => user.id === selectedUserId)
+  const closeCreate = () => setCreating(false)
 
   return (
     <>
@@ -21,56 +104,11 @@ function Users() {
           <h1>Usuários</h1>
           <p>Gerencie as contas, a situação e as permissões dos usuários do escritório.</p>
         </div>
+        <button type="button" className="btn-primary" onClick={() => setCreating(true)}>
+          <Plus size={18} aria-hidden="true" />
+          Novo usuário
+        </button>
       </div>
-
-      <QueryStatus pending={categories.isPending} error={categories.error} />
-      {categories.isSuccess && (
-        <RecordForm
-          title="Cadastrar usuário"
-          path="/users"
-          resource="users"
-          fields={(data) => ({
-            name: data.get('name'),
-            email: data.get('email'),
-            password: data.get('password'),
-            role: data.get('role'),
-            categoryIds: data.getAll('categoryIds'),
-          })}
-        >
-          <label>
-            Nome
-            <input name="name" required />
-          </label>
-          <label>
-            E-mail
-            <input name="email" type="email" required />
-          </label>
-          <label>
-            Senha inicial
-            <input name="password" type="password" autoComplete="new-password" required />
-          </label>
-          <label>
-            Perfil
-            <select name="role">
-              {roleOptions.map((role) => (
-                <option key={role} value={role}>
-                  {roleLabels[role]}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Categorias permitidas
-            <select name="categoryIds" multiple size={Math.min(7, categories.data.length || 1)}>
-              {categories.data.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        </RecordForm>
-      )}
 
       <QueryStatus pending={users.isPending} error={users.error} />
       {users.data && (
@@ -84,7 +122,9 @@ function Users() {
                   <th scope="col">E-mail</th>
                   <th scope="col">Perfil</th>
                   <th scope="col">Situação</th>
-                  <th scope="col">Ações</th>
+                  <th scope="col" className="actions-column">
+                    Ações
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -92,12 +132,20 @@ function Users() {
                   <tr key={user.id}>
                     <td>{user.name}</td>
                     <td>{user.email}</td>
-                    <td>{roleLabels[user.role]}</td>
-                    <td>{user.active ? 'Ativo' : 'Inativo'}</td>
                     <td>
-                      <button type="button" onClick={() => setSelectedUserId(user.id)}>
-                        Gerenciar
-                      </button>
+                      <StatusBadge tone="neutral">{roleLabels[user.role]}</StatusBadge>
+                    </td>
+                    <td>
+                      <StatusBadge tone={user.active ? 'success' : 'danger'}>
+                        {user.active ? 'Ativo' : 'Inativo'}
+                      </StatusBadge>
+                    </td>
+                    <td className="actions-column">
+                      <IconButton
+                        icon={UserCog}
+                        label={`Gerenciar ${user.name}`}
+                        onClick={() => setSelectedUserId(user.id)}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -113,84 +161,131 @@ function Users() {
             offset={offset}
             total={users.data.total}
             onChange={(next) => {
+              // Mudar de página fecha o modal, pois o usuário selecionado pode não estar na nova.
               setSelectedUserId('')
               setOffset(next)
             }}
           />
         </>
       )}
-      {selectedUser && (
-        <section className="record-form" aria-label={`Gerenciar ${selectedUser.name}`}>
-          <h2>Gerenciar {selectedUser.name}</h2>
-          {selectedUser.id === currentUser?.id ? (
-            <p>Você não pode alterar o próprio acesso. Peça a outro administrador.</p>
-          ) : (
-            <>
-              <p>
-                Situação: <strong>{selectedUser.active ? 'Ativo' : 'Inativo'}</strong>{' '}
-                <ActionButton
-                  label={selectedUser.active ? 'Inativar usuário' : 'Reativar usuário'}
-                  path={`/users/${selectedUser.id}/status`}
-                  body={{ active: !selectedUser.active }}
-                  resource="users"
-                />
-              </p>
-              {categories.data && (
-                <RecordForm
-                  key={`${selectedUser.id}-${selectedUser.role}-${selectedUser.allowedCategoryIds.join()}`}
-                  title="Alterar perfil e categorias"
-                  path={`/users/${selectedUser.id}/permissions`}
-                  resource="users"
-                  method="PATCH"
-                  fields={(data) => ({
-                    role: data.get('role'),
-                    categoryIds: data.getAll('categoryIds'),
-                  })}
-                >
-                  <label>
-                    Perfil
-                    <select name="role" defaultValue={selectedUser.role}>
-                      {roleOptions.map((role) => (
-                        <option key={role} value={role}>
-                          {roleLabels[role]}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    Categorias permitidas
-                    <select
-                      name="categoryIds"
-                      multiple
-                      size={Math.min(7, categories.data.length || 1)}
-                      defaultValue={selectedUser.allowedCategoryIds}
-                    >
-                      {categories.data.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </RecordForm>
-              )}
-            </>
-          )}
+
+      {/* Cadastro de usuário pelo administrador, sem autocadastro (RF01). */}
+      <Modal open={creating} onClose={closeCreate} title="Novo usuário" size="lg">
+        <QueryStatus pending={categories.isPending} error={categories.error} />
+        {categories.data && (
           <RecordForm
-            key={selectedUser.id}
-            title="Redefinir senha"
-            path={`/users/${selectedUser.id}/password`}
+            path="/users"
             resource="users"
-            method="PATCH"
-            fields={(data) => ({ password: data.get('password') })}
+            fields={(data) => ({
+              name: data.get('name'),
+              email: data.get('email'),
+              password: data.get('password'),
+              role: data.get('role'),
+              categoryIds: data.getAll('categoryIds'),
+            })}
+            submitLabel="Cadastrar"
+            onSuccess={closeCreate}
+            onCancel={closeCreate}
           >
-            <label>
-              Nova senha
-              <input name="password" type="password" autoComplete="new-password" required />
-            </label>
+            <div className="form-grid">
+              <label>
+                Nome
+                <input name="name" required />
+              </label>
+              <label>
+                E-mail
+                <input name="email" type="email" autoComplete="off" required />
+              </label>
+              <PasswordField label="Senha inicial" />
+              <RoleSelect />
+              <CategoryChecklist categories={categories.data} className="full" />
+            </div>
           </RecordForm>
-        </section>
-      )}
+        )}
+      </Modal>
+
+      {/* Gerenciar: situação (RF04), perfil e categorias (RF20) e redefinição de senha. */}
+      <Modal
+        open={Boolean(selectedUser)}
+        onClose={() => setSelectedUserId('')}
+        title={selectedUser ? `Gerenciar ${selectedUser.name}` : 'Gerenciar usuário'}
+        size="lg"
+      >
+        {selectedUser && (
+          <div className="manage-user">
+            {/* O admin não muda o próprio acesso, para não se trancar fora do sistema. */}
+            {selectedUser.id === currentUser?.id ? (
+              <p>Você não pode alterar o próprio acesso. Peça a outro administrador.</p>
+            ) : (
+              <>
+                <section className="manage-block" aria-labelledby="manage-status">
+                  <h3 id="manage-status">Situação</h3>
+                  <div className="manage-status">
+                    <StatusBadge tone={selectedUser.active ? 'success' : 'danger'}>
+                      {selectedUser.active ? 'Ativo' : 'Inativo'}
+                    </StatusBadge>
+                    {selectedUser.active ? (
+                      <ActionButton
+                        icon={Ban}
+                        variant="danger"
+                        label="Inativar usuário"
+                        confirm={`Inativar ${selectedUser.name}? A pessoa perde o acesso ao sistema, e o histórico é mantido.`}
+                        path={`/users/${selectedUser.id}/status`}
+                        body={{ active: false }}
+                        resource="users"
+                      />
+                    ) : (
+                      <ActionButton
+                        icon={RotateCcw}
+                        label="Reativar usuário"
+                        path={`/users/${selectedUser.id}/status`}
+                        body={{ active: true }}
+                        resource="users"
+                      />
+                    )}
+                  </div>
+                </section>
+
+                <section className="manage-block" aria-labelledby="manage-permissions">
+                  <h3 id="manage-permissions">Perfil e categorias</h3>
+                  <QueryStatus pending={categories.isPending} error={categories.error} />
+                  {categories.data && (
+                    <RecordForm
+                      key={selectedUser.id}
+                      path={`/users/${selectedUser.id}/permissions`}
+                      resource="users"
+                      method="PATCH"
+                      fields={(data) => ({
+                        role: data.get('role'),
+                        categoryIds: data.getAll('categoryIds'),
+                      })}
+                    >
+                      <RoleSelect defaultValue={selectedUser.role} />
+                      <CategoryChecklist
+                        categories={categories.data}
+                        checkedIds={selectedUser.allowedCategoryIds}
+                      />
+                    </RecordForm>
+                  )}
+                </section>
+              </>
+            )}
+
+            <section className="manage-block" aria-labelledby="manage-password">
+              <h3 id="manage-password">Redefinir senha</h3>
+              <RecordForm
+                key={selectedUser.id}
+                path={`/users/${selectedUser.id}/password`}
+                resource="users"
+                method="PATCH"
+                fields={(data) => ({ password: data.get('password') })}
+              >
+                <PasswordField label="Nova senha" />
+              </RecordForm>
+            </section>
+          </div>
+        )}
+      </Modal>
     </>
   )
 }

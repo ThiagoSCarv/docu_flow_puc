@@ -1,5 +1,6 @@
-﻿import { useMutation } from '@tanstack/react-query'
-import { FolderOpen } from 'lucide-react'
+﻿// Tela de login (RF02): e-mail e senha; mostra a mensagem genérica do servidor em caso de erro.
+import { useMutation } from '@tanstack/react-query'
+import { Eye, EyeOff, FolderOpen } from 'lucide-react'
 import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
@@ -9,8 +10,10 @@ import './Login.css'
 function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const token = useToken()
   const location = useLocation()
+  // Chamada pública (sem Bearer); o token recebido abre a sessão.
   const login = useMutation({
     mutationFn: () =>
       api<{ token: string }>('/auth/login', {
@@ -21,8 +24,10 @@ function Login() {
     onSuccess: ({ token }) => setToken(token),
   })
 
+  // Já logado: volta para a página que pediu login, ou para o início.
   if (token) return <Navigate to={location.state?.from ?? '/'} replace />
 
+  // Evita envio duplo enquanto a tentativa anterior não termina.
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!login.isPending) login.mutate()
@@ -63,20 +68,37 @@ function Login() {
 
           <div className="login-field">
             <label htmlFor="login-password">Senha</label>
-            <input
-              id="login-password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              placeholder="Digite sua senha"
-              value={password}
-              onChange={(event) => {
-                setPassword(event.target.value)
-                login.reset()
-              }}
-              disabled={login.isPending}
-              required
-            />
+            <div className="login-password">
+              <input
+                id="login-password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                placeholder="Digite sua senha"
+                value={password}
+                onChange={(event) => {
+                  setPassword(event.target.value)
+                  login.reset()
+                }}
+                disabled={login.isPending}
+                required
+              />
+              {/* Alterna a visibilidade da senha, com estado anunciado por aria-pressed. */}
+              <button
+                type="button"
+                className="login-password-toggle"
+                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                aria-pressed={showPassword}
+                title={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                onClick={() => setShowPassword((visible) => !visible)}
+              >
+                {showPassword ? (
+                  <EyeOff size={20} aria-hidden="true" />
+                ) : (
+                  <Eye size={20} aria-hidden="true" />
+                )}
+              </button>
+            </div>
           </div>
 
           <button type="submit" className="login-submit" disabled={login.isPending}>

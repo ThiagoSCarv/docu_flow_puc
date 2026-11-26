@@ -1,13 +1,28 @@
+// Tela de clientes (RF06–RF08, RF10): consulta com busca; ADMIN cadastra, edita e inativa.
+import { Ban, Pencil, Plus, RotateCcw, Search } from 'lucide-react'
 import { useState } from 'react'
 import { type Client, pageSize, useClientOptions, useCurrentUser, usePage } from '../../api'
-import { ActionButton, Pagination, QueryStatus, RecordForm } from '../../components'
+import {
+  ActionButton,
+  IconButton,
+  Modal,
+  Pagination,
+  QueryStatus,
+  RecordForm,
+  StatusBadge,
+} from '../../components'
 import './Clients.css'
+
+// Estado do modal: fechado, cadastro ou edição de um cliente específico.
+type ClientModal = { mode: 'create' } | { mode: 'edit'; client: Client } | null
 
 function Clients() {
   const { data: user } = useCurrentUser()
   const [offset, setOffset] = useState(0)
   const [search, setSearch] = useState('')
+  const [modal, setModal] = useState<ClientModal>(null)
 
+  // Com busca, carrega todos e filtra nome/código no cliente; sem busca, pagina no servidor.
   const term = search.trim().toLocaleLowerCase('pt-BR')
   const allClients = useClientOptions(Boolean(term))
   const page = usePage<Client>('clients', offset, !term)
@@ -20,8 +35,7 @@ function Clients() {
   const items = term ? matching?.slice(offset, offset + pageSize) : page.data?.items
   const total = (term ? matching?.length : page.data?.total) ?? 0
   const isAdmin = user?.role === 'ADMIN'
-  const [editingClientId, setEditingClientId] = useState('')
-  const editingClient = items?.find((client) => client.id === editingClientId)
+  const closeModal = () => setModal(null)
 
   return (
     <>
@@ -31,41 +45,33 @@ function Clients() {
           <h1>Clientes</h1>
           <p>Consulte os clientes cadastrados no catálogo. Inativar mantém os documentos.</p>
         </div>
+        {isAdmin && (
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => setModal({ mode: 'create' })}
+          >
+            <Plus size={18} aria-hidden="true" />
+            Novo cliente
+          </button>
+        )}
       </div>
-
-      {isAdmin && (
-        <RecordForm
-          title="Cadastrar cliente"
-          path="/clients"
-          resource="clients"
-          fields={(data) => ({
-            name: data.get('name'),
-            code: data.get('code'),
-          })}
-        >
-          <label>
-            Nome
-            <input name="name" required maxLength={200} />
-          </label>
-          <label>
-            Código
-            <input name="code" required maxLength={20} />
-          </label>
-        </RecordForm>
-      )}
 
       <div className="clients-filter">
         <label htmlFor="client-search">Pesquisar por nome ou código</label>
-        <input
-          id="client-search"
-          type="search"
-          placeholder="Ex.: Cliente A"
-          value={search}
-          onChange={(event) => {
-            setSearch(event.target.value)
-            setOffset(0)
-          }}
-        />
+        <div className="search-field">
+          <Search size={18} aria-hidden="true" />
+          <input
+            id="client-search"
+            type="search"
+            placeholder="Ex.: Cliente A"
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value)
+              setOffset(0)
+            }}
+          />
+        </div>
       </div>
 
       <QueryStatus pending={query.isPending} error={query.error} />
@@ -83,7 +89,11 @@ function Clients() {
                   <th scope="col">Nome</th>
                   <th scope="col">Código</th>
                   <th scope="col">Situação</th>
-                  {isAdmin && <th scope="col">Ações</th>}
+                  {isAdmin && (
+                    <th scope="col" className="actions-column">
+                      Ações
+                    </th>
+                  )}
                 </tr>
               </thead>
 
@@ -93,28 +103,38 @@ function Clients() {
                     <td>{client.name}</td>
                     <td>{client.code}</td>
                     <td>
-                      <span
-                        className={
-                          client.active
-                            ? 'client-status client-status-active'
-                            : 'client-status client-status-inactive'
-                        }
-                      >
+                      <StatusBadge tone={client.active ? 'success' : 'danger'}>
                         {client.active ? 'Ativo' : 'Inativo'}
-                      </span>
+                      </StatusBadge>
                     </td>
                     {isAdmin && (
-                      <td>
+                      <td className="actions-column">
                         <div className="table-actions">
-                          <button type="button" onClick={() => setEditingClientId(client.id)}>
-                            Editar nome
-                          </button>
-                          <ActionButton
-                            label={client.active ? 'Inativar' : 'Reativar'}
-                            path={`/clients/${client.id}/status`}
-                            body={{ active: !client.active }}
-                            resource="clients"
+                          <IconButton
+                            icon={Pencil}
+                            label="Editar cliente"
+                            onClick={() => setModal({ mode: 'edit', client })}
                           />
+                          {/* Inativar pede confirmação; reativar é direto (RF10). */}
+                          {client.active ? (
+                            <ActionButton
+                              icon={Ban}
+                              variant="danger"
+                              label="Inativar"
+                              confirm={`Inativar ${client.name}? Os documentos são mantidos.`}
+                              path={`/clients/${client.id}/status`}
+                              body={{ active: false }}
+                              resource="clients"
+                            />
+                          ) : (
+                            <ActionButton
+                              icon={RotateCcw}
+                              label="Reativar"
+                              path={`/clients/${client.id}/status`}
+                              body={{ active: true }}
+                              resource="clients"
+                            />
+                          )}
                         </div>
                       </td>
                     )}
@@ -135,21 +155,60 @@ function Clients() {
         </>
       )}
 
-      {editingClient && (
-        <RecordForm
-          key={`${editingClient.id}-${editingClient.name}`}
-          title={`Editar nome de ${editingClient.name} (${editingClient.code})`}
-          path={`/clients/${editingClient.id}`}
-          resource="clients"
-          method="PATCH"
-          fields={(data) => ({ name: data.get('name') })}
+      {/* Um só modal para cadastrar e editar; na edição o código fica bloqueado (RF07). */}
+      {isAdmin && (
+        <Modal
+          open={modal !== null}
+          onClose={closeModal}
+          title={modal?.mode === 'edit' ? 'Editar cliente' : 'Novo cliente'}
+          size="md"
         >
-          <label>
-            Novo nome
-            <input name="name" required maxLength={200} defaultValue={editingClient.name} />
-          </label>
-          <p>O código do cliente não muda, porque faz parte do nome dos documentos.</p>
-        </RecordForm>
+          {modal?.mode === 'create' && (
+            <RecordForm
+              path="/clients"
+              resource="clients"
+              fields={(data) => ({
+                name: data.get('name'),
+                code: data.get('code'),
+              })}
+              submitLabel="Cadastrar"
+              onSuccess={closeModal}
+              onCancel={closeModal}
+            >
+              <label>
+                Nome
+                <input name="name" required maxLength={200} />
+              </label>
+              <label>
+                Código
+                <input name="code" required maxLength={20} />
+              </label>
+            </RecordForm>
+          )}
+          {modal?.mode === 'edit' && (
+            <RecordForm
+              key={modal.client.id}
+              path={`/clients/${modal.client.id}`}
+              resource="clients"
+              method="PATCH"
+              fields={(data) => ({ name: data.get('name') })}
+              onSuccess={closeModal}
+              onCancel={closeModal}
+            >
+              <label>
+                Nome
+                <input name="name" required maxLength={200} defaultValue={modal.client.name} />
+              </label>
+              <label>
+                Código
+                <input defaultValue={modal.client.code} disabled />
+                <span className="field-hint">
+                  O código não muda, porque faz parte do nome dos documentos.
+                </span>
+              </label>
+            </RecordForm>
+          )}
+        </Modal>
       )}
     </>
   )

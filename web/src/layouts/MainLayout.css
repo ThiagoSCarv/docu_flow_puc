@@ -1,8 +1,8 @@
 .app-container {
   display: flex;
   min-height: 100vh;
-  background: #f5f7fb;
-  color: #202b3c;
+  background: var(--color-bg);
+  color: var(--color-fg);
 }
 
 .sidebar {
@@ -23,9 +23,9 @@
 }
 
 .brand-icon {
-  background: #2864d9;
+  background: var(--color-accent);
   padding: 10px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   display: flex;
 }
 
@@ -61,16 +61,16 @@
   align-items: center;
   gap: 13px;
   padding: 12px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   color: #c4cfdd;
   text-decoration: none;
   font-size: 14px;
-  transition: 0.2s;
+  transition: background-color var(--transition);
 }
 
 .menu-item:hover,
 .menu-item.active {
-  background: #2864d9;
+  background: var(--color-accent);
   color: #ffffff;
 }
 
@@ -109,8 +109,8 @@
 
 .topbar {
   height: 76px;
-  background: #ffffff;
-  border-bottom: 1px solid #e9edf3;
+  background: var(--color-card);
+  border-bottom: 1px solid var(--color-border);
   padding: 0 35px;
   display: flex;
   align-items: center;
@@ -128,18 +128,16 @@
   font-size: 13px;
 }
 
-.icon-button {
-  border: none;
-  background: transparent;
-  color: #637187;
-  cursor: pointer;
-}
-
 .page-content {
   padding: 35px;
 }
 
 .page-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
   margin-bottom: 25px;
 }
 
@@ -277,11 +275,10 @@
 }
 
 .quick-card:hover {
-  border-color: #2864d9;
+  border-color: var(--color-accent);
 }
 
-.quick-card:focus-visible,
 .menu-item:focus-visible {
-  outline: 3px solid #2864d9;
-  outline-offset: 3px;
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
 }

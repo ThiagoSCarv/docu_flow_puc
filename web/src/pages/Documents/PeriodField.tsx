@@ -1,5 +1,7 @@
-﻿import { useId, useState } from 'react'
+﻿// Campo de período (RF14): aceita "janeiro de 2026" ou AAAA-MM e converte entre os dois formatos.
+import { useId, useState } from 'react'
 
+// Fusos do Brasil; neles (ou em UTC) os meses aparecem em português, nos demais em inglês.
 const brazilianTimeZones = new Set([
   'America/Araguaina',
   'America/Bahia',
@@ -23,22 +25,27 @@ const brazilianTimeZones = new Set([
   'Brazil/West',
 ])
 
+// Escolhe o idioma dos nomes de mês a partir do fuso horário do navegador.
 export function periodLocale(
   timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone,
 ): 'pt-BR' | 'en-US' {
   return !timeZone || timeZone === 'UTC' || brazilianTimeZones.has(timeZone) ? 'pt-BR' : 'en-US'
 }
 
+// Um dia de cada mês em UTC, base para gerar os nomes dos meses com Intl.
 const monthDates = Array.from({ length: 12 }, (_, month) => new Date(Date.UTC(2000, month, 1)))
 function localizedMonths(locale: string) {
   const formatter = new Intl.DateTimeFormat(locale, { month: 'long', timeZone: 'UTC' })
   return monthDates.map((date) => formatter.format(date))
 }
 
+// Nomes dos meses calculados uma vez por idioma.
 const monthNames = { 'pt-BR': localizedMonths('pt-BR'), 'en-US': localizedMonths('en-US') }
 
+// Período no formato aceito pela API: AAAA-MM com mês de 01 a 12.
 const isoPeriod = /^([0-9]{4})-(0[1-9]|1[0-2])$/
 
+// Converte AAAA-MM em texto legível ("janeiro de 2026"); valor fora do padrão volta como veio.
 export function formatPeriod(period: string, locale = periodLocale()) {
   const match = isoPeriod.exec(period)
   if (!match) return period
@@ -47,6 +54,7 @@ export function formatPeriod(period: string, locale = periodLocale()) {
   return locale === 'pt-BR' ? `${name} de ${year}` : `${name} ${year}`
 }
 
+// Converte AAAA-MM ou "mês [de] ano" (pt ou en) em AAAA-MM; undefined se não reconhecer.
 export function parsePeriod(input: string) {
   const value = input.trim().toLowerCase().normalize('NFC')
   if (isoPeriod.test(value)) return value
@@ -66,6 +74,7 @@ type Props = {
   onChange?: (value: string) => void
 }
 
+// Input de texto com sugestões dos últimos três anos; acusa período inválido só ao sair do campo.
 export function PeriodField({ id, value, onChange, required }: Props) {
   const listId = useId()
   const [invalidOnBlur, setInvalid] = useState(false)
