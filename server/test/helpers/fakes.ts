@@ -1,6 +1,7 @@
 import type { Clock } from '../../src/application/ports/clock.js'
 import type { PasswordHasher } from '../../src/application/ports/password-hasher.js'
 import type {
+  ActivityLogCriteria,
   ActivityLogEntry,
   ActivityLogRepository,
 } from '../../src/domain/audit/activity-log.repository.js'
@@ -166,6 +167,26 @@ export class InMemoryActivityLogRepository implements ActivityLogRepository {
 
   async record(entry: ActivityLogEntry) {
     this.entries.push(entry)
+  }
+
+  async list({ action, userId }: ActivityLogCriteria, page: PageRequest) {
+    const records = this.entries
+      .map((entry, index) => ({
+        id: String(index),
+        action: entry.action,
+        entity: entry.entity ?? null,
+        entityId: entry.entityId ?? null,
+        ip: entry.ip ?? null,
+        createdAt: new Date(index),
+        user: entry.userId ? { id: entry.userId, name: '' } : null,
+      }))
+      .filter(
+        (record) =>
+          (action === undefined || record.action === action) &&
+          (userId === undefined || record.user?.id === userId),
+      )
+      .reverse()
+    return paginate(records, page)
   }
 
   actions() {

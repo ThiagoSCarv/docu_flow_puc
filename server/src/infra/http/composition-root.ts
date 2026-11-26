@@ -1,3 +1,4 @@
+import { ListActivityLogsUseCase } from '../../application/audit/list-activity-logs.use-case.js'
 import { ListSecurityGuidelinesUseCase } from '../../application/awareness/list-security-guidelines.use-case.js'
 import { ListBackupsUseCase } from '../../application/backup/list-backups.use-case.js'
 import { ListPendingBackupsUseCase } from '../../application/backup/list-pending-backups.use-case.js'
@@ -57,6 +58,7 @@ export function createUseCases(db: Database) {
     listBackups: new ListBackupsUseCase(backups),
     listPendingBackups: new ListPendingBackupsUseCase(backups),
     listSecurityGuidelines: new ListSecurityGuidelinesUseCase(),
+    listActivityLogs: new ListActivityLogsUseCase(activityLog),
   }
 }
 
