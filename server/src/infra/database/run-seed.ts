@@ -1,3 +1,4 @@
+// Script de linha de comando: aplica o seed básico e, com --demo, os dados fictícios de demonstração.
 import { eq } from 'drizzle-orm'
 import { Email } from '../../domain/identity/email.value-object.js'
 import { Password } from '../../domain/identity/password.value-object.js'
@@ -9,8 +10,10 @@ import { users } from './schema.js'
 import { seedAdmin, seedCategories } from './seed.js'
 
 const ADMIN_NAME = 'Administrador'
+// Flag que liga a carga de demonstração (npm run db:seed:demo).
 const withDemoData = process.argv.includes('--demo')
 
+// Sem credenciais do admin no .env não há como criar o primeiro usuário.
 if (!env.SEED_ADMIN_EMAIL || !env.SEED_ADMIN_PASSWORD) {
   console.error('Defina SEED_ADMIN_EMAIL e SEED_ADMIN_PASSWORD no server/.env para criar o admin.')
   process.exit(1)
@@ -21,6 +24,7 @@ if (withDemoData && !env.SEED_DEMO_PASSWORD) {
   process.exit(1)
 }
 
+// Passa pelos value objects para o admin seguir as mesmas regras de e-mail e senha (RNF15).
 const email = Email.create(env.SEED_ADMIN_EMAIL)
 const password = Password.create(env.SEED_ADMIN_PASSWORD)
 
@@ -32,6 +36,7 @@ await seedAdmin(db, {
 })
 console.log('Seed aplicado: categorias iniciais e administrador.')
 
+// Busca o admin recém-criado para ser o responsável pelos dados fictícios.
 if (withDemoData && env.SEED_DEMO_PASSWORD) {
   const [admin] = await db
     .select({ id: users.id, name: users.name })

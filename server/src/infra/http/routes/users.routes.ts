@@ -1,3 +1,4 @@
+// Infra HTTP: rotas de gestão de usuários, todas restritas ao ADMIN (RF01, RF04, RF05, RF20).
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import type { ChangeUserPermissionsUseCase } from '../../../application/identity/change-user-permissions.use-case.js'
@@ -28,8 +29,10 @@ export const userRoutes: FastifyPluginAsyncZod<UserRoutesOptions> = async (
   app,
   { createUser, listUsers, resetUserPassword, changeUserStatus, changeUserPermissions },
 ) => {
+  // Hook do plugin inteiro: toda rota abaixo exige perfil ADMIN.
   app.addHook('onRequest', app.requireRole(UserRole.ADMIN))
 
+  // GET /api/users: só ADMIN; lista paginada sem campos sensíveis (RNF10).
   app.get(
     '/users',
     {
@@ -49,6 +52,7 @@ export const userRoutes: FastifyPluginAsyncZod<UserRoutesOptions> = async (
     (request) => listUsers.execute(request.query),
   )
 
+  // POST /api/users: só ADMIN; cadastra usuário, pois não há autocadastro (RF01, RNF15).
   app.post(
     '/users',
     {
@@ -81,6 +85,7 @@ export const userRoutes: FastifyPluginAsyncZod<UserRoutesOptions> = async (
     },
   )
 
+  // PATCH /api/users/:id/status: só ADMIN; ativa ou inativa, nunca a própria conta (RF04).
   app.patch(
     '/users/:id/status',
     {
@@ -107,6 +112,7 @@ export const userRoutes: FastifyPluginAsyncZod<UserRoutesOptions> = async (
       }),
   )
 
+  // PATCH /api/users/:id/permissions: só ADMIN; troca perfil e categorias, registrado no log (RF20).
   app.patch(
     '/users/:id/permissions',
     {
@@ -133,6 +139,7 @@ export const userRoutes: FastifyPluginAsyncZod<UserRoutesOptions> = async (
       }),
   )
 
+  // PATCH /api/users/:id/password: só ADMIN; redefine a senha e desbloqueia, 204 sem corpo.
   app.patch(
     '/users/:id/password',
     {

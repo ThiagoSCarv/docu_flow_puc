@@ -1,3 +1,4 @@
+// Infra HTTP: composition root; único ponto que conhece as implementações concretas (DIP).
 import { ListActivityLogsUseCase } from '../../application/audit/list-activity-logs.use-case.js'
 import { ListSecurityGuidelinesUseCase } from '../../application/awareness/list-security-guidelines.use-case.js'
 import { ListBackupsUseCase } from '../../application/backup/list-backups.use-case.js'
@@ -29,6 +30,7 @@ import { DrizzleDocumentRepository } from '../database/repositories/drizzle-docu
 import { DrizzleUserRepository } from '../database/repositories/drizzle-user.repository.js'
 import type { Database } from '../database/types.js'
 
+// Instancia repositórios e serviços e injeta nos casos de uso por construtor, sem container de DI.
 export function createUseCases(db: Database) {
   const users = new DrizzleUserRepository(db)
   const categories = new DrizzleCategoryRepository(db)
@@ -64,4 +66,5 @@ export function createUseCases(db: Database) {
   }
 }
 
+// Tipo do conjunto de casos de uso, usado nas opções dos plugins de rota.
 export type UseCases = ReturnType<typeof createUseCases>

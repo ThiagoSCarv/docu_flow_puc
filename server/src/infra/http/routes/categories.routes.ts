@@ -1,3 +1,4 @@
+// Infra HTTP: rotas de categorias e de quem acessa cada categoria (RF12, RF19, RF20).
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import type { ListCategoriesUseCase } from '../../../application/catalog/list-categories.use-case.js'
@@ -22,6 +23,7 @@ export const categoryRoutes: FastifyPluginAsyncZod<CategoryRoutesOptions> = asyn
   app,
   { listCategories, listCategoryAccess },
 ) => {
+  // GET /api/categories: qualquer autenticado; só as categorias permitidas ao usuário (RF19).
   app.get(
     '/categories',
     {
@@ -36,6 +38,7 @@ export const categoryRoutes: FastifyPluginAsyncZod<CategoryRoutesOptions> = asyn
     (request) => listCategories.execute(request.user),
   )
 
+  // GET /api/categories/:id/users: só ADMIN; usuários que acessam a categoria, paginado (RF20).
   app.get(
     '/categories/:id/users',
     {

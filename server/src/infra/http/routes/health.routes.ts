@@ -1,7 +1,9 @@
+// Infra HTTP: rota de disponibilidade, para conferir que a API responde por HTTPS.
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 
 export const healthRoutes: FastifyPluginAsyncZod = async (app) => {
+  // GET /api/health: público; não toca no banco nem expõe dados.
   app.get(
     '/health',
     {

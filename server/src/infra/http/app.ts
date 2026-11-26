@@ -1,3 +1,4 @@
+// Infra HTTP: monta a aplicação Fastify com segurança, documentação, autenticação e rotas da API.
 import type { ServerOptions as HttpsOptions } from 'node:https'
 import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
@@ -27,8 +28,10 @@ import { healthRoutes } from './routes/health.routes.js'
 import { securityGuidelineRoutes } from './routes/security-guidelines.routes.js'
 import { userRoutes } from './routes/users.routes.js'
 
+// Prefixo da API, para não colidir com as rotas do React Router servidas na mesma origem.
 export const API_PREFIX = '/api'
 
+// Banco e segredo chegam por parâmetro, para os testes montarem a app sem ler o .env.
 export type AppOptions = FastifyServerOptions & {
   db: Database
   jwtSecret: string
@@ -36,24 +39,29 @@ export type AppOptions = FastifyServerOptions & {
   webDistDir?: string
 }
 
+// Cria a instância, liga os casos de uso e registra plugins e rotas; o cast mantém um tipo único.
 export async function buildApp({ db, jwtSecret, webDistDir, ...options }: AppOptions) {
   const app = Fastify(options as FastifyServerOptions).withTypeProvider<ZodTypeProvider>()
   const useCases = createUseCases(db)
 
+  // Validação Zod com mensagens em PT-BR (RNF07) e erros traduzidos num lugar só.
   z.config(z.locales.ptBR())
   app.setValidatorCompiler(validatorCompiler)
   app.setSerializerCompiler(serializerCompiler)
   app.setErrorHandler(errorHandler)
 
+  // Cabeçalhos de segurança e rate limit ligado só nas rotas que o pedem (ex.: login).
   await app.register(helmet)
   await app.register(rateLimit, { global: false })
   await registerDocs(app)
 
+  // Autenticação JWT antes das rotas, para que todas possam usar app.authenticate.
   await app.register(authPlugin, {
     jwtSecret,
     getAuthenticatedUser: useCases.getAuthenticatedUser,
   })
 
+  // Cada plugin de rota recebe só os casos de uso de que precisa.
   await app.register(healthRoutes, { prefix: API_PREFIX })
   await app.register(authRoutes, { prefix: API_PREFIX, login: useCases.login })
   await app.register(userRoutes, {
@@ -100,11 +108,13 @@ export async function buildApp({ db, jwtSecret, webDistDir, ...options }: AppOpt
 
   await app.register(dashboardRoutes, { prefix: API_PREFIX, getDashboard: useCases.getDashboard })
 
+  // Serve o build do React na mesma origem HTTPS quando ele existe (npm run demo).
   if (webDistDir) await app.register(webAppPlugin, { root: webDistDir })
 
   return app
 }
 
+// Swagger em /docs gerado a partir dos schemas Zod, com autenticação Bearer JWT.
 async function registerDocs(app: ReturnType<typeof Fastify>) {
   await app.register(swagger, {
     openapi: {

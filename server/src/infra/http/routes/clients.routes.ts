@@ -1,3 +1,4 @@
+// Infra HTTP: rotas de cadastro, consulta, edição e inativação de clientes (RF06–RF08, RF10).
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import type { ChangeClientStatusUseCase } from '../../../application/catalog/change-client-status.use-case.js'
@@ -21,12 +22,14 @@ type ClientRoutesOptions = {
   changeClientStatus: ChangeClientStatusUseCase
 }
 
+// Parâmetro :id validado como UUID antes de chegar ao banco.
 const clientIdParams = z.object({ id: z.uuid() })
 
 export const clientRoutes: FastifyPluginAsyncZod<ClientRoutesOptions> = async (
   app,
   { createClient, listClients, renameClient, changeClientStatus },
 ) => {
+  // PATCH /api/clients/:id: só ADMIN; renomeia o cliente mantendo o código (RF07).
   app.patch(
     '/clients/:id',
     {
@@ -54,6 +57,7 @@ export const clientRoutes: FastifyPluginAsyncZod<ClientRoutesOptions> = async (
       }),
   )
 
+  // PATCH /api/clients/:id/status: só ADMIN; ativa ou inativa sem apagar documentos (RF10).
   app.patch(
     '/clients/:id/status',
     {
@@ -81,6 +85,7 @@ export const clientRoutes: FastifyPluginAsyncZod<ClientRoutesOptions> = async (
       }),
   )
 
+  // GET /api/clients: qualquer autenticado; lista paginada em ordem alfabética (RF08).
   app.get(
     '/clients',
     {
@@ -96,6 +101,7 @@ export const clientRoutes: FastifyPluginAsyncZod<ClientRoutesOptions> = async (
     (request) => listClients.execute(request.query),
   )
 
+  // POST /api/clients: só ADMIN; cadastra cliente com código único, 409 se repetido (RF06).
   app.post(
     '/clients',
     {

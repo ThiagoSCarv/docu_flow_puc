@@ -1,3 +1,4 @@
+// Infra: gera em lote dados fictícios determinísticos para a demonstração (usuários, clientes etc.).
 import { inArray } from 'drizzle-orm'
 import { Backup } from '../../domain/backup/backup.entity.js'
 import { Client } from '../../domain/catalog/client.entity.js'
@@ -20,12 +21,14 @@ import {
 } from './schema.js'
 import type { Database } from './types.js'
 
+// Escala padrão e contas fixas usadas para mostrar perfis diferentes na demonstração.
 export const DEMO_CLIENT_COUNT = 1000
 export const DEMO_EMPLOYEE_EMAIL = 'funcionario@exemplo.com'
 export const DEMO_VIEWER_EMAIL = 'consulta@exemplo.com'
 export const DEMO_EMPLOYEE_CATEGORIES = ['CONT', 'FIS', 'FIN']
 export const DEMO_VIEWER_CATEGORIES = ['CONT', 'FIS']
 
+// Proporções e parâmetros de geração; tudo derivado do número de clientes.
 const USERS_PER_CLIENT = 0.5
 const BACKUPS_PER_CLIENT = 1
 const BASE_DOCUMENTS_PER_CLIENT = 3
@@ -41,6 +44,7 @@ const FAILED_BACKUP_EVERY_N_DAYS = 20
 const PENDING_VERIFICATION_DAYS = 3
 const BACKUP_SCOPE = 'Pasta de clientes na nuvem'
 
+// Vocabulário fictício combinado de forma cíclica para variar nomes, categorias e descrições.
 const CATEGORY_CODES = ['CONT', 'FIS', 'FIN', 'CTR', 'ADM', 'OUT']
 const ADMIN_ONLY_CATEGORIES = ['CTR', 'ADM', 'OUT']
 const CLIENT_SEGMENTS = [
@@ -73,6 +77,7 @@ const DESCRIPTIONS_BY_CATEGORY: Record<string, string[]> = {
   OUT: ['Comprovante de endereço', 'Correspondência recebida', 'Documento diverso'],
 }
 
+// Tipos de entrada e do resumo devolvido ao script run-seed.ts.
 type ActorRef = { id: string }
 type LogEntry = typeof activityLogs.$inferInsert
 
@@ -89,6 +94,7 @@ export type DemoSeedSummary = {
   backups: number
 }
 
+// Contagens esperadas por escala, exportadas para o teste conferir a proporção.
 export function demoUserCount(clientCount: number) {
   return Math.max(2, Math.round(clientCount * USERS_PER_CLIENT))
 }
@@ -107,12 +113,14 @@ export function demoClientCode(index: number) {
   return `CLI-${sequence(index)}`
 }
 
+// Ponto de entrada: monta tudo pelas fábricas do domínio e grava numa transação; null se já existe.
 export async function seedDemoData(
   db: Database,
   { admin, password, clientCount = DEMO_CLIENT_COUNT }: DemoSeedInput,
 ): Promise<DemoSeedSummary | null> {
   if (await demoDataExists(db, clientCount)) return null
 
+  // Um único bcrypt para todos os usuários, para a carga caber em poucos segundos.
   const now = new Date()
   const passwordHash = await new BcryptPasswordHasher().hash(Password.create(password).value)
   const categoryIdByCode = await loadCategoryIds(db)
@@ -123,6 +131,7 @@ export async function seedDemoData(
   const demoDocuments = buildDocuments({ demoClients, categoryIdByCode, admin, employee, now })
   const demoBackups = buildBackups(clientCount, admin, now)
 
+  // Uma entrada no log para cada criação, como fariam os casos de uso (RF26).
   const logs: LogEntry[] = [
     ...demoUsers.map((user) =>
       logEntry(admin, ActivityAction.USUARIO_CRIADO, ActivityEntity.USERS, user.id),
@@ -143,6 +152,7 @@ export async function seedDemoData(
     ),
   ]
 
+  // Tudo ou nada: se um lote falhar, nenhum dado de demonstração fica pela metade.
   await db.transaction(async (tx) => {
     await insertInChunks(tx, users, demoUsers.map(toUserRow))
     await insertInChunks(tx, userCategoryPermissions, demoUsers.flatMap(toPermissionRows))
@@ -160,6 +170,7 @@ export async function seedDemoData(
   }
 }
 
+// Seção de construção: usuários fixos de demonstração mais os gerados, com categorias variadas.
 function buildUsers(
   clientCount: number,
   passwordHash: string,
@@ -209,6 +220,7 @@ function buildUsers(
   )
 }
 
+// Clientes "Segmento Exemplo NNNN Sufixo" com código CLI-NNNN.
 function buildClients(clientCount: number, now: Date) {
   return Array.from({ length: clientCount }, (_, index) => {
     const segment = CLIENT_SEGMENTS[index % CLIENT_SEGMENTS.length]
@@ -220,6 +232,7 @@ function buildClients(clientCount: number, now: Date) {
   })
 }
 
+// Documentos de 3 ou 4 por cliente com nome padronizado (RF31); categorias restritas ficam com o admin.
 function buildDocuments(input: {
   demoClients: Client[]
   categoryIdByCode: Map<string, string>
@@ -251,6 +264,7 @@ function buildDocuments(input: {
   )
 }
 
+// Um backup por dia, voltando a partir de ontem às 22h.
 function buildBackups(clientCount: number, admin: ActorRef, now: Date) {
   const lastBackupAt = new Date(now)
   lastBackupAt.setDate(lastBackupAt.getDate() - 1)
@@ -266,6 +280,7 @@ function buildBackups(clientCount: number, admin: ActorRef, now: Date) {
   })
 }
 
+// Situação do backup: falha periódica, os mais recentes pendentes de verificação, o resto verificado.
 function backupOutcome(daysAgo: number): { status: BackupStatus; notes?: string } {
   if (daysAgo % FAILED_BACKUP_EVERY_N_DAYS === FAILED_BACKUP_EVERY_N_DAYS - 1) {
     return { status: BackupStatus.FALHOU, notes: 'Sincronização interrompida; repetir' }
@@ -276,6 +291,7 @@ function backupOutcome(daysAgo: number): { status: BackupStatus; notes?: string 
   return { status: BackupStatus.VERIFICADO }
 }
 
+// Seção de utilitários: quantidade de documentos do cliente, sequência com zeros e entrada de log.
 function documentsForClient(clientIndex: number) {
   const extra = clientIndex % EXTRA_DOCUMENT_EVERY_N_CLIENTS === 0 ? 1 : 0
   return BASE_DOCUMENTS_PER_CLIENT + extra
@@ -294,6 +310,7 @@ function logEntry(
   return { userId: actor.id, action, entity, entityId, ip: SEED_ACTOR_IP }
 }
 
+// Seção de mapeamento entidade → linha, equivalente ao que os repositórios fazem.
 function toUserRow(user: User) {
   return {
     id: user.id,
@@ -347,6 +364,7 @@ function toBackupRow(backup: Backup) {
   }
 }
 
+// Insere em lotes para não estourar o limite de parâmetros por query do PostgreSQL.
 async function insertInChunks<TTable extends Parameters<Database['insert']>[0]>(
   db: Database,
   table: TTable,
@@ -357,6 +375,7 @@ async function insertInChunks<TTable extends Parameters<Database['insert']>[0]>(
   }
 }
 
+// Torna o seed idempotente: qualquer cliente CLI-xxxx ou e-mail fixo já existente impede a carga.
 async function demoDataExists(db: Database, clientCount: number) {
   const codes = Array.from({ length: clientCount }, (_, index) => demoClientCode(index))
   const [existingClient] = await db
@@ -372,11 +391,13 @@ async function demoDataExists(db: Database, clientCount: number) {
   return Boolean(existingClient || existingUser)
 }
 
+// Mapa código → id das categorias criadas pelo seed básico.
 async function loadCategoryIds(db: Database) {
   const rows = await db.select({ id: categories.id, code: categories.code }).from(categories)
   return new Map(rows.map((row) => [row.code, row.id]))
 }
 
+// Falha com mensagem clara se o seed de categorias ainda não foi rodado.
 function requireId(idByCode: Map<string, string>, code: string) {
   const id = idByCode.get(code)
   if (!id) throw new Error(`Código ${code} não encontrado; rode a seed de categorias antes.`)

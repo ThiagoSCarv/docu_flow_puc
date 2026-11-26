@@ -1,3 +1,4 @@
+// Infra: repositório Drizzle dos documentos, com busca filtrada por categorias permitidas (RF15, RF19).
 import { and, count, desc, eq, ilike, inArray, or, type SQL } from 'drizzle-orm'
 import type { CategoryScope } from '../../../domain/catalog/category-access.policy.js'
 import { Document } from '../../../domain/catalog/document.entity.js'
@@ -14,11 +15,13 @@ import type { Database } from '../types.js'
 
 type DocumentRow = typeof documents.$inferSelect
 
+// Curingas do LIKE escapados para o texto do usuário ser buscado literalmente.
 const LIKE_WILDCARDS = /[\\%_]/g
 
 export class DrizzleDocumentRepository implements DocumentRepository {
   constructor(private readonly db: Database) {}
 
+  // Grava o documento já com o nome padronizado pelo domínio (RF31).
   async save(document: Document): Promise<void> {
     await this.db.insert(documents).values({
       id: document.id,
@@ -33,6 +36,7 @@ export class DrizzleDocumentRepository implements DocumentRepository {
     })
   }
 
+  // Verifica nome padronizado repetido antes de inserir, para responder 409 em vez de erro do banco.
   async existsWithName(name: DocumentName): Promise<boolean> {
     const [row] = await this.db
       .select({ id: documents.id })
@@ -42,6 +46,7 @@ export class DrizzleDocumentRepository implements DocumentRepository {
     return row !== undefined
   }
 
+  // Busca paginada pelos critérios, do documento mais recente ao mais antigo.
   async search(criteria: DocumentSearchCriteria, page: PageRequest): Promise<Page<Document>> {
     const where = and(...this.conditionsFor(criteria))
     const [rows, [{ total }]] = await Promise.all([
@@ -57,6 +62,7 @@ export class DrizzleDocumentRepository implements DocumentRepository {
     return { items: rows.map((row) => this.toEntity(row)), total }
   }
 
+  // Total de documentos por categoria, restrito às que o usuário pode ver (RF29).
   async countByCategory(categoryIds: CategoryScope): Promise<CategoryDocumentCount[]> {
     const where =
       categoryIds === 'ALL' ? undefined : inArray(documents.categoryId, [...categoryIds])
@@ -68,6 +74,7 @@ export class DrizzleDocumentRepository implements DocumentRepository {
       .orderBy(documents.categoryId)
   }
 
+  // Monta os filtros: categorias permitidas, cliente, período e texto em nome ou descrição.
   private conditionsFor({ text, categoryIds, clientId, period }: DocumentSearchCriteria) {
     const conditions: (SQL | undefined)[] = []
     if (categoryIds !== 'ALL') conditions.push(inArray(documents.categoryId, [...categoryIds]))
@@ -80,6 +87,7 @@ export class DrizzleDocumentRepository implements DocumentRepository {
     return conditions
   }
 
+  // Reconstrói a entidade; o nome usa restore porque create padronizaria de novo.
   private toEntity(row: DocumentRow): Document {
     return Document.restore({
       ...row,

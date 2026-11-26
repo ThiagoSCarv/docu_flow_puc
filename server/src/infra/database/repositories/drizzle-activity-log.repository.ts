@@ -1,3 +1,4 @@
+// Infra: repositório Drizzle do log de atividades, gravação e consulta paginada (RF26, RF27).
 import { and, count, desc, eq } from 'drizzle-orm'
 import type {
   ActivityLogCriteria,
@@ -12,10 +13,12 @@ import type { Database } from '../types.js'
 export class DrizzleActivityLogRepository implements ActivityLogRepository {
   constructor(private readonly db: Database) {}
 
+  // Grava uma ação relevante (login, criação, mudança de permissão).
   async record(entry: ActivityLogEntry): Promise<void> {
     await this.db.insert(activityLogs).values(entry)
   }
 
+  // Lista do mais recente ao mais antigo, filtrando por ação e usuário, com o total para paginar.
   async list(
     { action, userId }: ActivityLogCriteria,
     page: PageRequest,
@@ -35,6 +38,7 @@ export class DrizzleActivityLogRepository implements ActivityLogRepository {
         .offset(page.offset),
       this.db.select({ total: count() }).from(activityLogs).where(where),
     ])
+    // leftJoin porque o usuário pode ter sido removido; nesse caso o autor vira null.
     const items = rows.map(({ log, userName }) => ({
       id: log.id,
       action: log.action,

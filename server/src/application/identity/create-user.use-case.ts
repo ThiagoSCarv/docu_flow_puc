@@ -1,3 +1,4 @@
+// Camada de aplicação: cadastro de usuário pelo administrador, sem autocadastro (RF01).
 import type { ActivityLogRepository } from '../../domain/audit/activity-log.repository.js'
 import type { CategoryRepository } from '../../domain/catalog/category.repository.js'
 import { Email } from '../../domain/identity/email.value-object.js'
@@ -11,6 +12,7 @@ import type { PasswordHasher } from '../ports/password-hasher.js'
 import { ensureCategoriesExist } from './ensure-categories-exist.js'
 import { toUserDto, type UserDto } from './user.dto.js'
 
+// Dados do novo usuário com senha em texto puro, que só existe até virar hash.
 export type CreateUserInput = {
   name: string
   email: string
@@ -20,6 +22,7 @@ export type CreateUserInput = {
   actor: { userId: string; ip: string }
 }
 
+// Cria o usuário com perfil e categorias permitidas e registra a criação no log (RF05, RF26).
 export class CreateUserUseCase {
   constructor(
     private readonly users: UserRepository,
@@ -29,6 +32,7 @@ export class CreateUserUseCase {
     private readonly clock: Clock,
   ) {}
 
+  // Valida e-mail e força da senha (RNF15), checa duplicidade e grava só o hash (RNF04).
   async execute(input: CreateUserInput): Promise<UserDto> {
     const email = Email.create(input.email)
     const password = Password.create(input.password)
@@ -58,6 +62,7 @@ export class CreateUserUseCase {
     return toUserDto(user)
   }
 
+  // Recusa e-mail já cadastrado por outro usuário.
   private async ensureEmailIsAvailable(email: Email): Promise<void> {
     if (await this.users.findByEmail(email)) throw new EmailAlreadyInUseError()
   }

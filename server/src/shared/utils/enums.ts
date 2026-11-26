@@ -1,15 +1,20 @@
+// Base compartilhada: todos os enums do back-end; schema, validação e testes derivam daqui.
+
+// Perfis de acesso (RF05).
 export enum UserRole {
   ADMIN = 'ADMIN',
   FUNCIONARIO = 'FUNCIONARIO',
   CONSULTA = 'CONSULTA',
 }
 
+// Situação de um registro de backup (RF23, RF25).
 export enum BackupStatus {
   REALIZADO = 'REALIZADO',
   VERIFICADO = 'VERIFICADO',
   FALHOU = 'FALHOU',
 }
 
+// Ações registradas no log de atividades; ação nova entra como membro aqui (RF26).
 export enum ActivityAction {
   LOGIN_SUCESSO = 'LOGIN_SUCESSO',
   LOGIN_FALHA = 'LOGIN_FALHA',
@@ -27,6 +32,7 @@ export enum ActivityAction {
   DOCUMENTO_CRIADO = 'DOCUMENTO_CRIADO',
 }
 
+// Tipo de registro afetado por uma ação do log, com o nome da tabela correspondente.
 export enum ActivityEntity {
   USERS = 'users',
   DOCUMENTS = 'documents',

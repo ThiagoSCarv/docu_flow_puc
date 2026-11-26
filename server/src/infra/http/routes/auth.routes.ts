@@ -1,13 +1,16 @@
+// Infra HTTP: rotas de login e do usuário autenticado (RF02, RNF14).
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import type { LoginUseCase } from '../../../application/identity/login.use-case.js'
 import { badRequestSchema, bearerAuth, messageSchema, userSchema } from '../schemas.js'
 
+// Limite de tentativas por IP contra força bruta, somado ao bloqueio por conta (RNF13).
 const LOGIN_RATE_LIMIT = { max: 10, timeWindow: '1 minute' }
 
 type AuthRoutesOptions = { login: LoginUseCase }
 
 export const authRoutes: FastifyPluginAsyncZod<AuthRoutesOptions> = async (app, { login }) => {
+  // POST /api/auth/login: público; o caso de uso valida e a rota assina o JWT com o id do usuário.
   app.post(
     '/auth/login',
     {
@@ -31,6 +34,7 @@ export const authRoutes: FastifyPluginAsyncZod<AuthRoutesOptions> = async (app, 
     },
   )
 
+  // GET /api/auth/me: qualquer usuário autenticado; devolve os próprios dados, sem campos sensíveis.
   app.get(
     '/auth/me',
     {

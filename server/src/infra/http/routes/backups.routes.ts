@@ -1,3 +1,4 @@
+// Infra HTTP: rotas de registro e consulta de backups (RF22–RF25).
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import type { ListBackupsUseCase } from '../../../application/backup/list-backups.use-case.js'
@@ -24,6 +25,7 @@ export const backupRoutes: FastifyPluginAsyncZod<BackupRoutesOptions> = async (
   app,
   { registerBackup, listBackups, listPendingBackups },
 ) => {
+  // GET /api/backups: qualquer autenticado; histórico paginado (RF24).
   app.get(
     '/backups',
     {
@@ -39,6 +41,7 @@ export const backupRoutes: FastifyPluginAsyncZod<BackupRoutesOptions> = async (
     (request) => listBackups.execute(request.query),
   )
 
+  // GET /api/backups/pending: qualquer autenticado; backups ainda não verificados (RF25).
   app.get(
     '/backups/pending',
     {
@@ -54,6 +57,7 @@ export const backupRoutes: FastifyPluginAsyncZod<BackupRoutesOptions> = async (
     (request) => listPendingBackups.execute(request.query),
   )
 
+  // POST /api/backups: só ADMIN; registra o backup com quem registrou como responsável (RF22, RF23).
   app.post(
     '/backups',
     {

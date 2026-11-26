@@ -1,3 +1,4 @@
+// Infra HTTP: rotas de cadastro e pesquisa de documentos do catálogo (RF11–RF17, RF19, RF31).
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import type { CreateDocumentUseCase } from '../../../application/catalog/create-document.use-case.js'
@@ -17,9 +18,11 @@ type DocumentRoutesOptions = {
   searchDocuments: SearchDocumentsUseCase
 }
 
+// Limites de tamanho dos textos livres, para barrar entradas abusivas (RNF07).
 const DESCRIPTION_MAX_LENGTH = 200
 const SEARCH_MAX_LENGTH = 100
 
+// Filtro de texto opcional; string vazia vira undefined para não filtrar por nada.
 const optionalText = (maxLength: number) =>
   z
     .string()
@@ -32,6 +35,7 @@ export const documentRoutes: FastifyPluginAsyncZod<DocumentRoutesOptions> = asyn
   app,
   { createDocument, searchDocuments },
 ) => {
+  // GET /api/documents: qualquer autenticado; busca paginada só nas categorias permitidas (RF15, RF19).
   app.get(
     '/documents',
     {
@@ -59,6 +63,7 @@ export const documentRoutes: FastifyPluginAsyncZod<DocumentRoutesOptions> = asyn
     },
   )
 
+  // POST /api/documents: ADMIN ou FUNCIONARIO nas categorias permitidas; link só em HTTPS (RF11).
   app.post(
     '/documents',
     {
