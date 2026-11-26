@@ -1,10 +1,12 @@
 import { ListSecurityGuidelinesUseCase } from '../../application/awareness/list-security-guidelines.use-case.js'
 import { ListBackupsUseCase } from '../../application/backup/list-backups.use-case.js'
 import { RegisterBackupUseCase } from '../../application/backup/register-backup.use-case.js'
+import { ChangeClientStatusUseCase } from '../../application/catalog/change-client-status.use-case.js'
 import { CreateClientUseCase } from '../../application/catalog/create-client.use-case.js'
 import { CreateDocumentUseCase } from '../../application/catalog/create-document.use-case.js'
 import { ListCategoriesUseCase } from '../../application/catalog/list-categories.use-case.js'
 import { ListClientsUseCase } from '../../application/catalog/list-clients.use-case.js'
+import { RenameClientUseCase } from '../../application/catalog/rename-client.use-case.js'
 import { SearchDocumentsUseCase } from '../../application/catalog/search-documents.use-case.js'
 import { ChangeUserPermissionsUseCase } from '../../application/identity/change-user-permissions.use-case.js'
 import { ChangeUserStatusUseCase } from '../../application/identity/change-user-status.use-case.js'
@@ -48,6 +50,8 @@ export function createUseCases(db: Database) {
     listCategories: new ListCategoriesUseCase(categories),
     createClient: new CreateClientUseCase(clients, activityLog, clock),
     listClients: new ListClientsUseCase(clients),
+    renameClient: new RenameClientUseCase(clients, activityLog),
+    changeClientStatus: new ChangeClientStatusUseCase(clients, activityLog),
     registerBackup: new RegisterBackupUseCase(backups, activityLog, clock),
     listBackups: new ListBackupsUseCase(backups),
     listSecurityGuidelines: new ListSecurityGuidelinesUseCase(),

@@ -76,6 +76,8 @@ export async function buildApp({ db, jwtSecret, webDistDir, ...options }: AppOpt
     prefix: API_PREFIX,
     createClient: useCases.createClient,
     listClients: useCases.listClients,
+    renameClient: useCases.renameClient,
+    changeClientStatus: useCases.changeClientStatus,
   })
   await app.register(backupRoutes, {
     prefix: API_PREFIX,

@@ -29,3 +29,23 @@ describe('Client.create', () => {
     )
   })
 })
+
+describe('Client: edição e situação', () => {
+  it('renomeia sem mudar o código e sem espaços nas pontas', () => {
+    const client = Client.create({ name: 'Cliente A', code: 'CLI-A' }, NOW)
+
+    client.rename('  Cliente A Ltda ')
+
+    expect(client).toMatchObject({ name: 'Cliente A Ltda', code: 'CLI-A' })
+  })
+
+  it('inativa e reativa', () => {
+    const client = Client.create({ name: 'Cliente A', code: 'CLI-A' }, NOW)
+
+    client.deactivate()
+    expect(client.active).toBe(false)
+
+    client.activate()
+    expect(client.active).toBe(true)
+  })
+})
