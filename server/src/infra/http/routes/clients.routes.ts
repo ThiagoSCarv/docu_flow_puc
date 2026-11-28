@@ -112,7 +112,12 @@ export const clientRoutes: FastifyPluginAsyncZod<ClientRoutesOptions> = async (
         security: bearerAuth,
         body: z.object({
           name: z.string().trim().min(1).max(200),
-          code: z.string(),
+          code: z
+            .string()
+            .trim()
+            .min(1)
+            .max(20)
+            .regex(/^[A-Za-z0-9-]+$/, 'Use apenas letras, números e hífen'),
         }),
         response: {
           201: clientSchema,

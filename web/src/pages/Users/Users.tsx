@@ -79,7 +79,15 @@ function PasswordField({ label }: { label: string }) {
   return (
     <label>
       {label}
-      <input name="password" type="password" autoComplete="new-password" required />
+      <input
+        name="password"
+        type="password"
+        autoComplete="new-password"
+        required
+        minLength={8}
+        pattern="(?=.*[A-Za-z])(?=.*[0-9]).{8,}"
+        title="Use pelo menos 8 caracteres, incluindo letras e números"
+      />
       <span className="field-hint">{passwordHint}</span>
     </label>
   )
@@ -190,7 +198,7 @@ function Users() {
             <div className="form-grid">
               <label>
                 Nome
-                <input name="name" required />
+                <input name="name" required maxLength={200} pattern=".*\S.*" />
               </label>
               <label>
                 E-mail

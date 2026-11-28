@@ -110,11 +110,13 @@ function Documents() {
               // O servidor monta o nome padronizado; o front envia os dados e o período validado.
               const period = parsePeriod(String(data.get('period')))
               if (!period) throw new ApiError('Informe um período válido no formato AAAA-MM.', 400)
+              const description = String(data.get('description') ?? '').trim()
+              if (!description) throw new ApiError('Informe uma descrição para o documento.', 400)
               return {
                 clientId: data.get('clientId'),
                 categoryId: data.get('categoryId'),
                 period,
-                description: data.get('description'),
+                description,
                 cloudLocation: data.get('cloudLocation'),
               }
             }}
@@ -152,7 +154,14 @@ function Documents() {
               </label>
               <label>
                 Link HTTPS na nuvem
-                <input name="cloudLocation" type="url" required placeholder="https://" />
+                <input
+                  name="cloudLocation"
+                  type="url"
+                  required
+                  pattern="https://.+"
+                  placeholder="https://"
+                  title="Informe um endereço HTTPS válido"
+                />
               </label>
               <label className="full">
                 Descrição

@@ -141,7 +141,13 @@ function Backups() {
             <div className="form-grid">
               <label>
                 Data
-                <input type="date" name="backupDate" defaultValue={currentLocalDate()} required />
+                <input
+                  type="date"
+                  name="backupDate"
+                  defaultValue={currentLocalDate()}
+                  max={currentLocalDate()}
+                  required
+                />
               </label>
               <label>
                 Hora
@@ -159,7 +165,7 @@ function Backups() {
               </label>
               <label>
                 Abrangência
-                <input name="scope" required maxLength={200} />
+                <input name="scope" required maxLength={200} pattern=".*\S.*" />
               </label>
               <label className="full">
                 Observações

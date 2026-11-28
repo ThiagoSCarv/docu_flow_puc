@@ -177,11 +177,18 @@ function Clients() {
             >
               <label>
                 Nome
-                <input name="name" required maxLength={200} />
+                <input name="name" required maxLength={200} pattern=".*\S.*" />
               </label>
               <label>
                 Código
-                <input name="code" required maxLength={20} />
+                <input
+                  name="code"
+                  required
+                  maxLength={20}
+                  pattern="[A-Za-z0-9-]+"
+                  title="Use apenas letras, números e hífen"
+                />
+                <span className="field-hint">Até 20 caracteres: letras, números e hífen.</span>
               </label>
             </RecordForm>
           )}
@@ -197,7 +204,13 @@ function Clients() {
             >
               <label>
                 Nome
-                <input name="name" required maxLength={200} defaultValue={modal.client.name} />
+                <input
+                  name="name"
+                  required
+                  maxLength={200}
+                  pattern=".*\S.*"
+                  defaultValue={modal.client.name}
+                />
               </label>
               <label>
                 Código
